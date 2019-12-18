@@ -1,0 +1,16 @@
+{
+  "name": "0005 Transfer Learning",
+  "description": "Using Transfer Learning",
+  "batch_size": 1,
+  "epochs": 1000,
+  "max_image_side_length": 512,
+  "train_dataset_name": "puppet_measure_bands",
+  "dataset_split": [0.67, 0.165, 0.165],
+  "shuffle_dataset": true,
+  "shuffle_seed": 0,
+  "learning_rate": 0.0001,
+  "augmentation": [],
+  "use_transfer_learning": true,
+  "allow_base_layer_training": false,
+  "simplify_classes": true
+}

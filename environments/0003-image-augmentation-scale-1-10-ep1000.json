@@ -1,0 +1,24 @@
+{
+  "name": "0003 Image Augmentation, Scale 1x to 10x, 1000 Epochs",
+  "description": "Augmentation 1x to 10x",
+  "batch_size": 1,
+  "epochs": 1000,
+  "max_image_side_length": 768,
+  "train_dataset_name": "puppet_measure_bands",
+  "dataset_split": [0.67, 0.165, 0.165],
+  "shuffle_dataset": true,
+  "shuffle_seed": 0,
+  "learning_rate": 0.001,
+  "augmentation": {
+    "type": "affine",
+    "params": {
+      "scale": "(1.0, 10.0)",
+      "translate_percent": {
+        "x": "(-0.5, 0.5)",
+        "y": "(-0.5, 0.5)"
+      }
+    }
+  },
+  "normalize_color": true,
+  "simplify_classes": true
+}

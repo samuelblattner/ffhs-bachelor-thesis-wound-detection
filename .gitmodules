@@ -1,0 +1,12 @@
+[submodule "neural_nets/retina_net"]
+	path = neural_nets/retina_net
+	url = https://github.com/fizyr/keras-retinanet.git
+[submodule "neural_nets/frcnn"]
+	path = neural_nets/frcnn
+	url = https://github.com/jinfagang/keras_frcnn.git
+[submodule "neural_nets/yolo_3"]
+	path = neural_nets/yolo_3
+	url = https://github.com/experiencor/keras-yolo3.git
+[submodule "neural_nets/mask_rcnn"]
+	path = neural_nets/mask_rcnn
+	url = https://github.com/matterport/Mask_RCNN.git

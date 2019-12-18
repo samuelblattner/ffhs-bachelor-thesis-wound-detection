@@ -1,0 +1,16 @@
+.idea
+data/
+checkpoints/
+*.pyc
+backend.h5
+yolov3.weights
+confidential
+.DS_Store
+*train.log
+nohup.out
+*.log
+*.jpg
+*.png
+*.JPG
+*.jpeg
+*.PNG

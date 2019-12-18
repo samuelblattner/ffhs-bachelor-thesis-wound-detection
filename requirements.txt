@@ -1,0 +1,4 @@
+#-r neural_nets/mask_rcnn/requirements.txt
+-r neural_nets/retina_net/requirements.txt
+
+pytest==5.2.1

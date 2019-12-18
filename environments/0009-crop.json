@@ -1,0 +1,38 @@
+{
+  "name": "0009 Transfer Learning Image Augmentation Crop",
+  "description": "Transfer Learning, Augmentation 1x to 10x, Rotate 90deg",
+  "notes": "Overfitting, finds wounds in mouths",
+  "batch_size": 1,
+  "epochs": 1000,
+  "max_image_side_length": 512,
+  "train_dataset_name": "puppet_measure_bands",
+  "dataset_split": [
+    0.67,
+    0.165,
+    0.165
+  ],
+  "shuffle_dataset": true,
+  "shuffle_seed": 0,
+  "learning_rate": 0.0001,
+  "use_transfer_learning": true,
+  "augmentation": {
+    "type": "sequential",
+    "params": {
+      "children": [
+        {
+          "type": "affine",
+          "params": {
+            "scale": "(1.0, 6.0)",
+            "translate_percent": {
+              "x": "(-0.5, 0.5)",
+              "y": "(-0.5, 0.5)"
+            },
+            "rotate": "(-90.0, 90.0)"
+          }
+        }
+      ]
+    }
+  },
+  "center_color_to_imagenet": true,
+  "simplify_classes": true
+}

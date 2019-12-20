@@ -1,5 +1,5 @@
 {
-  "name": "0011 All Cases",
+  "name": "0011d All Cases",
   "description": "All Cases dataset",
   "batch_size": 1,
   "epochs": 1000,

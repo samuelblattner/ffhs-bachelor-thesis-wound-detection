@@ -1,26 +1,25 @@
 {
-  "name": "0011c All Cases",
-  "description": "All Cases dataset",
+  "name": "0017 tl imgaug 1x 3x rot90 closeup wounds confidential",
+  "description": "",
   "batch_size": 1,
   "epochs": 1000,
   "max_image_side_length": 512,
-  "train_dataset_name": "cases",
-  "dataset_split": [0.67, 0.165, 0.165],
-  "split_by_filename_base": true,
+  "train_dataset_name": "closeup_wounds_confidential",
+  "dataset_split": [0.80, 0.2, 0.0],
   "shuffle_dataset": true,
-  "shuffle_seed": 2,
+  "shuffle_seed": 0,
   "learning_rate": 0.0001,
   "use_transfer_learning": true,
   "allow_base_layer_training": true,
-  "gpu_no": 1,
   "augmentation": {
     "type": "affine",
     "params": {
-      "scale": "(1.0, 7.0)",
+      "scale": "(1.0, 3.0)",
       "translate_percent": {
         "x": "(-0.5, 0.5)",
         "y": "(-0.5, 0.5)"
-      }
+      },
+      "rotate": "(-90.0, 90.0)"
     }
   },
   "simplify_classes": true

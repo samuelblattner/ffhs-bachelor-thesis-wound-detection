@@ -2,15 +2,11 @@ from typing import List, Tuple
 
 import keras
 import numpy as np
-from cv2.cv2 import resize
 from keras import Model
-from tensorflow.python.keras.metrics import Recall
-from keras import backend as K
 from common.adapters.models.interfaces import AbstractModelAdapter
 from common.detection import Detection
-from common.enums import ModelPurposeEnum
 from common.environment import Environment
-from neural_nets.mask_rcnn.mrcnn.utils import resize_image
+from common.utils.images import resize_image
 from neural_nets.retina_net.keras_retinanet import models, losses
 from neural_nets.retina_net.keras_retinanet.bin.train import create_models
 

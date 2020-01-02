@@ -11,7 +11,6 @@ from keras.layers import Input as LayerInput
 from keras.optimizers import Adam
 from keras.utils import generic_utils
 from keras.applications.resnet50 import ResNet50
-from mrcnn.visualize import draw_box
 
 from common.adapters.datasets.interfaces import AbstractDataset
 from common.adapters.models.interfaces import AbstractModelAdapter

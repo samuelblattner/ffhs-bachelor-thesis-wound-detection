@@ -10,7 +10,8 @@ import numpy as np
 from PIL import Image, ImageDraw
 from imgaug import BoundingBoxesOnImage, BoundingBox
 from imgaug.augmenters import Augmenter, CropToFixedSize
-from mrcnn.utils import resize_image, resize_mask, extract_bboxes
+
+from common.utils.images import resize_image, resize_mask, extract_bboxes
 
 
 class AbstractDataset:

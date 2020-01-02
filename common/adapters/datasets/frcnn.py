@@ -2,14 +2,12 @@ from typing import List
 
 import cv2
 import numpy as np
-from PIL import Image
 from imgaug.augmenters import Augmenter
 from keras import backend as K
-from mrcnn.visualize import draw_box
 
 from common.adapters.datasets.interfaces import AbstractDataset
 from neural_nets.frcnn.keras_frcnn.data_generators import calc_rpn, get_new_img_size
-from neural_nets.frcnn.keras_frcnn import resnet as nn, config, data_augment
+from neural_nets.frcnn.keras_frcnn import resnet as nn, config
 
 
 class FRCNNDataset(AbstractDataset):

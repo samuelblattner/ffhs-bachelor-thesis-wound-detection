@@ -81,6 +81,7 @@ class ModelSuite:
                             default='mrcnn', type=str, required=True)
         parser.add_argument('--checkpoint_dir', help='Directory where model checkpoints are stored. Default: ./checkpoints.', default='./checkpoints', type=str,
                             required=False)
+        parser.add_argument('--data_dir', help='Base directory for datasets. Default: ./data', default='./data', type=str, required=False)
         parser.add_argument('--eval_dir', help='Evaluation directory', default='./evaluation', type=str, required=False)
         parser.add_argument('--full_size_eval', help='Full Size Eval', default=False, type=bool, required=False)
         parser.add_argument('--gpu_no', help='GPU no', default=0, type=int, required=False)
@@ -105,6 +106,7 @@ class ModelSuite:
         env.neural_net_type = NET_MAP.get(args.net_type)
         env.dataset_class = DATASET_CLASS_MAP.get(env.neural_net_type)
         env.checkpoint_root = args.checkpoint_dir
+        env.data_root = args.data_dir
         env.img_scale_mode = 'just' if 'retina' in args.net_type else 'square'
         env.evaluation_dir = args.eval_dir
         env.gpu_no = args.gpu_no

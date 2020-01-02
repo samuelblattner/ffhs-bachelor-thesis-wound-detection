@@ -1,10 +1,8 @@
 from typing import List
 
-import cv2
 import numpy as np
 from imgaug.augmenters import Augmenter
 
-from neural_nets.mask_rcnn.mrcnn.visualize import draw_box
 from neural_nets.retina_net.keras_retinanet.preprocessing.generator import Generator
 from neural_nets.retina_net.keras_retinanet.utils.anchors import anchor_targets_bbox, guess_shapes
 from neural_nets.retina_net.keras_retinanet.utils.image import TransformParameters, preprocess_image

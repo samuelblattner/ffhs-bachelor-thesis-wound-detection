@@ -17,3 +17,7 @@ nohup.out
 *.pyx
 *.c
 *.so
+
+# Venv
+/_venv
+pyvenv.cfg

@@ -10,7 +10,6 @@ from os.path import join
 from common.adapters.datasets.interfaces import AbstractDataset
 from common.enums import NeuralNetEnum, ModelPurposeEnum
 
-DEFAULT_DATASET_ROOT = join('data', 'vanilla_datasets')
 
 AUGMENTATION_MAP = {
     'fliplr': imgaug.augmenters.Fliplr,
@@ -97,6 +96,7 @@ class Environment:
     class_names: list = []
 
     checkpoint_root: str = './checkpoints'
+    data_root: str = './data'
 
     dataset_class: Type[AbstractDataset] = None
 
@@ -151,6 +151,7 @@ class Environment:
                 env.split_by_filename_base = config_dict.get('split_by_filename_base', env.split_by_filename_base)
                 env.gpu_no = config_dict.get('gpu_no', env.gpu_no)
                 env.full_size_eval = config_dict.get('full_size_eval', env.full_size_eval)
+                env.data_root = config_dict.get('data_dir', env.data_root)
 
                 return env
         except FileNotFoundError:
@@ -196,9 +197,9 @@ class Environment:
             self.augmentation = self.inflate_augmentation(self.augmentation)
 
         self.__train_dataset, self.__val_dataset, self.__test_dataset = self.dataset_class.create_datasets(
-            train_dataset_path=join(DEFAULT_DATASET_ROOT, self.train_dataset_name),
-            val_dataset_path=join(DEFAULT_DATASET_ROOT, self.val_dataset_name) if self.val_dataset_name else None,
-            test_dataset_path=join(DEFAULT_DATASET_ROOT, self.test_dataset_name) if self.test_dataset_name else None,
+            train_dataset_path=join(self.data_root, self.train_dataset_name),
+            val_dataset_path=join(self.data_root, self.val_dataset_name) if self.val_dataset_name else None,
+            test_dataset_path=join(self.data_root, self.test_dataset_name) if self.test_dataset_name else None,
             dataset_split=self.dataset_split, shuffle=self.shuffle_dataset, shuffle_seed=self.shuffle_seed,
             batch_size=self.batch_size, max_image_side_length=self.max_image_side_length, augmentation=self.augmentation,
             center_color_to_imagenet=self.center_color_to_imagenet, simplify_classes=self.simplify_classes, image_scale_mode=self.img_scale_mode,
@@ -245,10 +246,10 @@ class Environment:
             for dataset_name in (self.train_dataset_name, self.val_dataset_name, self.test_dataset_name):
                 if dataset_name is None:
                     continue
-                if not os.path.isdir(join(DEFAULT_DATASET_ROOT, dataset_name)):
+                if not os.path.isdir(join(self.data_root, dataset_name)):
                     raise ValueError('No dataset by the name \'{dataset_name}\' found in directory {dir}!'.format(
                         dataset_name=dataset_name,
-                        dir=DEFAULT_DATASET_ROOT
+                        dir=self.data_root
                     ))
 
         # Check split

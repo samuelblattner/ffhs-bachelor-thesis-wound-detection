@@ -1,15 +1,29 @@
 # Bachelor Thesis
 
 
+## Prerequisites
+Python >= 3.3
+
 ## Setup
 
 1. Clone repo
-2. Install virtualenvwrapper
-3. Add net submodule directories to virtualenv
+2. Initialize submodules
 
-        $ add2virtualenv <base dir of repo>/neural_nets/mask_rcnn 
-        $ add2virtualenv neural_nets/retina_net/
-    
+        $ git submodule update --init --recursive
+
+3. Make & activate Virtual Environment
+
+        $ python -m venv <project-directory>/_venv
+        $ . <project-directory>/bin/activate
+
+4. Install requirements
+
+        $ pip install requirements.txt    
+   
 4. Compile external dependencies
 
         $ cd neural_nets/retina_net && python setup.py build_ext --inplace
+        
+5. Add to pythonpath
+
+        $ export PYTHONPATH=$(pwd)/neural_nets/frcnn/:$(pwd)/neural_nets/yolo_3

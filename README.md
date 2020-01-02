@@ -3,6 +3,7 @@
 
 ## Prerequisites
 Python >= 3.3
+apt-get install python3-venv
 
 ## Setup
 

@@ -3,7 +3,7 @@
 PROJECT_DIR=$(dirname "$0")
 
 printf 'Checking out submodules...'
-cd "$PROJECT_DIR" && git submodule update --init --recursive
+cd "$PROJECT_DIR" && git submodule update --init --recursive > /dev/null 2>&1
 printf 'done.'
 
 printf '\nSetting up Virtual Environment...'

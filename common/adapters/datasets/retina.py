@@ -1,8 +1,10 @@
 from typing import List
 
+import cv2
 import numpy as np
 from imgaug.augmenters import Augmenter
 
+from common.utils.images import draw_box
 from neural_nets.retina_net.keras_retinanet.preprocessing.generator import Generator
 from neural_nets.retina_net.keras_retinanet.utils.anchors import anchor_targets_bbox, guess_shapes
 from neural_nets.retina_net.keras_retinanet.utils.image import TransformParameters, preprocess_image
@@ -133,6 +135,11 @@ class RetinaDataset(AbstractDataset, Generator):
         # ==========================
         # ==========================
         # draw = batch_of_input_images[0].copy()
+        #
+        # draw[..., 0] += 123.68  # R
+        # draw[..., 1] += 116.779  # G
+        # draw[..., 2] += 103.939  # B
+        #
         # print(draw.shape)
         # for ann in annotations:
         #     for box in ann.get('bboxes'):
@@ -154,11 +161,15 @@ class RetinaDataset(AbstractDataset, Generator):
         # from matplotlib import pyplot as plt
         # plt.figure(figsize=(20, 20))
         # plt.axis('off')
-        # plt.imshow(draw.astype(np.uint8))
+        # try:
+        #     plt.imshow(draw.astype(np.uint8))
+        # except:
+        #     pass
         # plt.show()
         #
-        # print(batch_of_input_images.shape)
+        # # print(batch_of_input_images.shape)
         #
+
         # exit(0)
         # ==========================
         # ==========================

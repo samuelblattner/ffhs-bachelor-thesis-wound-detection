@@ -56,6 +56,8 @@ class Environment:
     #: Whether to train on high-res wound image patches (instead of full body shots)
     extract_wound_patches: bool = False
 
+    # LEGACY
+    # ----------------------------------
     #: Name for the train dataset
     train_dataset_name: str = None
     val_dataset_name: str = None
@@ -63,6 +65,9 @@ class Environment:
 
     #: Dataset split
     dataset_split = None
+    # ----------------------------------
+
+    datasets: List = []
 
     #: SHuffle
     shuffle_dataset: bool = True
@@ -109,8 +114,10 @@ class Environment:
     evaluation_dir: str = './evaluation'
     pre_image_scale: float = 0.5
     split_by_filename_base: bool = False
+    max_examples_per_filename_base: int = 0
     gpu_no: int = 0
     full_size_eval: bool = False
+    eval_images: bool = False
 
     @classmethod
     def from_json(cls, path: str):
@@ -149,6 +156,7 @@ class Environment:
                 env.center_color_to_imagenet = config_dict.get('center_color_to_imagenet', env.center_color_to_imagenet)
                 env.pre_image_scale = config_dict.get('pre_image_scale', env.pre_image_scale)
                 env.split_by_filename_base = config_dict.get('split_by_filename_base', env.split_by_filename_base)
+                env.max_examples_per_filename_base = config_dict.get('max_examples_per_filename_base', env.max_examples_per_filename_base)
                 env.gpu_no = config_dict.get('gpu_no', env.gpu_no)
                 env.full_size_eval = config_dict.get('full_size_eval', env.full_size_eval)
                 env.data_root = config_dict.get('data_dir', env.data_root)
@@ -203,7 +211,7 @@ class Environment:
             dataset_split=self.dataset_split, shuffle=self.shuffle_dataset, shuffle_seed=self.shuffle_seed,
             batch_size=self.batch_size, max_image_side_length=self.max_image_side_length, augmentation=self.augmentation,
             center_color_to_imagenet=self.center_color_to_imagenet, simplify_classes=self.simplify_classes, image_scale_mode=self.img_scale_mode,
-            pre_image_scale=self.pre_image_scale, split_by_filename_base=self.split_by_filename_base
+            pre_image_scale=self.pre_image_scale, split_by_filename_base=self.split_by_filename_base, max_examples_per_filename_base=self.max_examples_per_filename_base
         )
 
         self.__train_dataset.IMAGE_FACTOR = self.__val_dataset.IMAGE_FACTOR = self.__test_dataset.IMAGE_FACTOR = self.pre_image_scale

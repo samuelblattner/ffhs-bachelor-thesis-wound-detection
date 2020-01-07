@@ -197,7 +197,7 @@ class AbstractModelAdapter:
             validation_data=val_dataset,
             validation_steps=np.ceil(len(val_dataset) / self.env.batch_size),
             max_queue_size=5,
-            workers=4,
+            workers=1,
             use_multiprocessing=False,
             shuffle=False,
             callbacks=self.get_callbacks(loss_patience, val_loss_patience)
@@ -213,4 +213,8 @@ class AbstractModelAdapter:
 
     @abstractmethod
     def build_models(self) -> Tuple[Model, Model]:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def generate_inference_heatmaps(self, image: np.array, plots) -> np.array:
         raise NotImplementedError()

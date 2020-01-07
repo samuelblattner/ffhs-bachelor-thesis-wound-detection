@@ -83,6 +83,7 @@ class ModelSuite:
                             required=False)
         parser.add_argument('--data_dir', help='Base directory for datasets. Default: ./data', default='./data', type=str, required=False)
         parser.add_argument('--eval_dir', help='Evaluation directory', default='./evaluation', type=str, required=False)
+        parser.add_argument('--eval_images', help='Stores and displays evaluation images if enabled', default=False, required=False, action='store_true')
         parser.add_argument('--full_size_eval', help='Full Size Eval', default=False, type=bool, required=False)
         parser.add_argument('--gpu_no', help='GPU no', default=0, type=int, required=False)
 
@@ -111,6 +112,7 @@ class ModelSuite:
         env.evaluation_dir = args.eval_dir
         env.gpu_no = args.gpu_no
         env.full_size_eval = args.full_size_eval
+        env.eval_images = args.eval_images
         env.validate()
         env.prepare()
 
@@ -183,9 +185,19 @@ class ModelSuite:
         out = {}
         full_path = join(self.env.evaluation_dir, self.env.full_config_name)
 
+        # self.model.train_model[0].summary()
+        # self.model.train_model[1].summary()
+
+        if self.env.eval_images:
+            from matplotlib import pyplot as plt
+            fig, axs = plt.subplots(len(test_dataset.get_image_info()), 2, figsize=(10, 60))
+
         for i, image_info in enumerate(test_dataset.get_image_info()):
             raw_image = test_dataset.load_image(i)
             dets = self.model.predict([raw_image], min_score)[0]
+
+            if self.env.eval_images:
+                self.model.generate_inference_heatmaps(raw_image, axs[i, 1:])
 
             mask_data = test_dataset._masks.get(image_info.get('id')).get('masks_raw')
 
@@ -227,15 +239,19 @@ class ModelSuite:
                         color=(32, 245, 255),
                         thickness=3)
 
-            # import matplotlib.pyplot as plt
-            #
-            # plt.figure(figsize=(20, 20))
-            # plt.axis('off')
-            # plt.imshow(raw_image.astype(np.uint8))
-            # plt.show()
+            if self.env.eval_images:
+
+                axs[i, 0].imshow(raw_image.astype(np.uint8))
+
+                # plt.show()
+                # exit(0)
+
+        if self.env.eval_images:
+            plt.show()
             os.makedirs(full_path, exist_ok=True)
-            # with open('{}/{}.jpg'.format(full_path, i), 'wb') as f:
-            #     Image.fromarray(raw_image.astype(np.uint8)).save(f)
+            with open('{}/eval-{}{}.pdf'.format(full_path, self.model.full_name, '-fullsize' if self.env.full_size_eval else ''), 'wb') as f:
+                fig.savefig(f, format='pdf')
+                # Image.fromarray(plt).save(f)
 
         for iou_threshold in iou_thresholds:
 

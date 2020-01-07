@@ -117,7 +117,7 @@ class AbstractDataset:
             cls,
             train_dataset_path: str, val_dataset_path: str = None, test_dataset_path: str = None,
             dataset_split: Tuple = None, shuffle: bool = False, shuffle_seed: int = None, split_by_filename_base: bool = False,
-            **kwargs):
+            max_examples_per_filename_base=0, **kwargs):
         """
         Factory method to create training-, validation- and test data from an external dataset.
         If no path is indicated for validation and test dataset, and a dataset_split tuple is
@@ -234,6 +234,34 @@ class AbstractDataset:
                             for remove_id in remove_ids:
 
                                 source.pop(source.index(remove_id))
+
+            if max_examples_per_filename_base > 0:
+                file_name_bases_count = {}
+                images_info_sets = (
+                    (train_image_ids, train_image_infos),
+                    (val_image_ids, val_image_infos),
+                    (test_image_ids, test_image_ids)
+                )
+                for image_ids, image_infos in images_info_sets:
+                    remove_ids = []
+                    for image_id, image_info in zip(image_ids, image_infos):
+
+                        file_name_base = re.findall(r'([\w\d]{32}-)', image_info.get('path'))
+                        if not file_name_base:
+                            continue
+
+                        file_name_base = file_name_base[0]
+
+                        if file_name_bases_count.get(file_name_base, 0) >= max_examples_per_filename_base:
+                            remove_ids.append(image_id)
+                            continue
+
+                        file_name_bases_count.setdefault(file_name_base, 0)
+                        file_name_bases_count[file_name_base] += 1
+
+                    for remove_id in remove_ids:
+                        image_infos.pop(image_ids.index(remove_id))
+                        image_ids.remove(image_ids.index(remove_id))
 
             for image_id in range(n_images):
                 if image_id in train_image_ids:
@@ -459,7 +487,7 @@ class AbstractDataset:
                         masks[:, 3] = np.multiply(masks[:, 3], s_h)
 
                 image, w, scale, p, c = resize_image(
-                    image, max_dim=self.max_image_side_length,
+                    image, max_dim=self.max_image_side_length, min_dim=self.max_image_side_length
                 )
 
                 # print(w, p, c, scale)
@@ -472,6 +500,10 @@ class AbstractDataset:
                     # masks2 = []
                     # print(masks)
                     masks = np.multiply(masks, scale)
+
+                    if p[0][0] > 0:
+                        masks[:, 1] += p[0][0]
+                        masks[:, 3] += p[0][0]
 
                     if has_crop:
                         masks[:, 0] += p[1][0]

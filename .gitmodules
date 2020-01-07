@@ -7,3 +7,6 @@
 [submodule "neural_nets/yolo_3"]
 	path = neural_nets/yolo_3
 	url = https://github.com/experiencor/keras-yolo3.git
+[submodule "utils/anchor-optimization"]
+	path = utils/anchor-optimization
+	url = https://github.com/martinzlocha/anchor-optimization.git

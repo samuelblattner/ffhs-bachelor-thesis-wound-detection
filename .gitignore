@@ -21,3 +21,4 @@ nohup.out
 # Venv
 /_venv
 pyvenv.cfg
+evaluation/**/*.pdf

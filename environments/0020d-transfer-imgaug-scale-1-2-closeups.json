@@ -1,0 +1,27 @@
+{
+  "name": "0020d Transfer Learning ImgAug Scale 1x to 2x Closeups",
+  "description": "Transfer Learning, Augmentation 1x to 2x",
+  "batch_size": 1,
+  "epochs": 1000,
+  "max_image_side_length": 512,
+  "train_dataset_name": "closeup_wounds",
+  "pre_image_scale": 1.0,
+  "dataset_split": [0.67, 0.165, 0.165],
+  "shuffle_dataset": true,
+  "shuffle_seed": 3,
+  "learning_rate": 0.0001,
+  "use_transfer_learning": true,
+  "allow_base_layer_training": false,
+  "augmentation": {
+    "type": "affine",
+    "params": {
+      "scale": "(1.0, 2.0)",
+      "translate_percent": {
+        "x": "(-0.5, 0.5)",
+        "y": "(-0.5, 0.5)"
+      }
+    }
+  },
+  "center_color_to_imagenet": true,
+  "simplify_classes": true
+}

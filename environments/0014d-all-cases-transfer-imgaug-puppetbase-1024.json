@@ -1,17 +1,18 @@
 {
-  "name": "0007e Transfer Learning Hires Image Augmentation Scale 1x to 7x",
-  "description": "Transfer Learning, Hires, Augmentation 1x to 10x, Rotate 90deg",
-  "notes": "Overfitting, finds wounds in mouths",
+  "name": "0014d All Cases Transfer ImgAug Puppetbase 1024",
+  "description": "All Cases dataset, Transfer Learning, Augmentation 1x to 7x, All Cases dataset, puppet weight base",
   "batch_size": 1,
   "epochs": 1000,
   "max_image_side_length": 1024,
-  "train_dataset_name": "puppet_measure_bands",
+  "train_dataset_name": "cases",
   "dataset_split": [0.67, 0.165, 0.165],
+  "split_by_filename_base": true,
   "shuffle_dataset": true,
-  "shuffle_seed": 0,
+  "shuffle_seed": 3,
   "learning_rate": 0.0001,
   "use_transfer_learning": true,
   "allow_base_layer_training": true,
+  "gpu_no": 2,
   "augmentation": {
     "type": "affine",
     "params": {

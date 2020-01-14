@@ -1,5 +1,5 @@
 {
-  "name": "0017b tl imgaug rot90 closeup wounds confidential",
+  "name": "0017h tl imgaug rot90 closeup wounds confidential",
   "description": "",
   "batch_size": 1,
   "epochs": 1000,
@@ -11,7 +11,7 @@
     0.165
   ],
   "shuffle_dataset": true,
-  "shuffle_seed": 0,
+  "shuffle_seed": 3,
   "learning_rate": 0.0001,
   "use_transfer_learning": true,
   "allow_base_layer_training": true,

@@ -382,11 +382,13 @@ class AbstractDataset:
 
     def __load_dataset(self, dataset_path: str = None):
 
-        with open(join(dataset_path, 'annotations.json'), 'r', encoding='utf-8') as f:
-            content = ''.join(f.readlines())
-            self.__extract_image_infos_from_annotations_file(dataset_path, content)
-            self.__extract_mask_infos_from_annotations_file(content)
-            self.__extract_category_infos_from_annotations_file(content)
+        if dataset_path:
+
+            with open(join(dataset_path, 'annotations.json'), 'r', encoding='utf-8') as f:
+                content = ''.join(f.readlines())
+                self.__extract_image_infos_from_annotations_file(dataset_path, content)
+                self.__extract_mask_infos_from_annotations_file(content)
+                self.__extract_category_infos_from_annotations_file(content)
 
     def __len__(self):
         return len(self.__image_info)
@@ -650,6 +652,18 @@ class AbstractDataset:
 
         # Retrieve actual image id according to external dataset
         image_id = self.__image_id_map[image_idx]
+
+        if as_box:
+            mask_info = self._masks.get(self.__image_info[image_idx].get('id')).get('masks_raw')
+            boxes = []
+            labels = []
+            for info in mask_info:
+                x1, y1, w, h = info.get('bbox')
+                boxes.append([x1, y1, x1 + w, y1 + h])
+                labels.append(info.get('category_id'))
+            return np.multiply(np.asarray(boxes), self.IMAGE_FACTOR), np.asarray(labels)
+
+            # mask_data = test_dataset._masks.get(image_info.get('id')).get('masks_raw')
 
         # Get mask data (label and polygon points in the form of (x1,y1,x2,y2,x3,y3,...,xn,yn)
         mask_data = self._masks.get(image_id)

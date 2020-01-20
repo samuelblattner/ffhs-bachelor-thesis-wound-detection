@@ -7,15 +7,33 @@
   "datasets": [
     {
       "name": "puppet_measure_bands",
-      "split": [0.67, 0.165, 0.165]
-    },
-    {
-      "name": "closeup_wounds",
-      "split": [1.0, 0.0, 0.0],
+      "split": [
+        0.67,
+        0.165,
+        0.165
+      ],
       "augmentation": {
         "type": "affine",
         "params": {
           "scale": "(1.0, 6.0)",
+          "translate_percent": {
+            "x": "(-0.5, 0.5)",
+            "y": "(-0.5, 0.5)"
+          }
+        }
+      }
+    },
+    {
+      "name": "closeup_wounds",
+      "split": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "augmentation": {
+        "type": "affine",
+        "params": {
+          "scale": "(1.0, 3.0)",
           "translate_percent": {
             "x": "(-0.5, 0.5)",
             "y": "(-0.5, 0.5)"

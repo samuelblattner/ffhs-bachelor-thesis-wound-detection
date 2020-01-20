@@ -8,8 +8,9 @@ import os
 from os.path import join
 
 from common.adapters.datasets.interfaces import AbstractDataset
+from common.adapters.datasets.union import UnionDataset
 from common.enums import NeuralNetEnum, ModelPurposeEnum
-
+from neural_nets.retina_net.keras_retinanet.preprocessing.generator import Generator
 
 AUGMENTATION_MAP = {
     'fliplr': imgaug.augmenters.Fliplr,
@@ -160,6 +161,7 @@ class Environment:
                 env.gpu_no = config_dict.get('gpu_no', env.gpu_no)
                 env.full_size_eval = config_dict.get('full_size_eval', env.full_size_eval)
                 env.data_root = config_dict.get('data_dir', env.data_root)
+                env.datasets = config_dict.get('datasets', [])
 
                 return env
         except FileNotFoundError:
@@ -180,6 +182,8 @@ class Environment:
 
     def inflate_augmentation(self, params: dict):
         aug_class = AUGMENTATION_MAP.get(params.get('type'))
+        if aug_class is None:
+            return None
         sub_params = params.get('params', {})
         self.replace_tuples(sub_params)
         args = []
@@ -200,23 +204,51 @@ class Environment:
         if not self.valid:
             self.validate()
 
-        # Transformations
-        if self.augmentation and type(self.augmentation) == dict:
-            self.augmentation = self.inflate_augmentation(self.augmentation)
+        datasets = self.datasets if len(self.datasets) > 0 else [{
+            'name': self.train_dataset_name,
+            'split': self.dataset_split,
+            'pre_image_scale': self.pre_image_scale,
+            'split_by_filename_base': self.split_by_filename_base,
+            'max_examples_per_filename_base': self.max_examples_per_filename_base,
+            'augmentation': self.augmentation
+        }]
 
-        self.__train_dataset, self.__val_dataset, self.__test_dataset = self.dataset_class.create_datasets(
-            train_dataset_path=join(self.data_root, self.train_dataset_name),
-            val_dataset_path=join(self.data_root, self.val_dataset_name) if self.val_dataset_name else None,
-            test_dataset_path=join(self.data_root, self.test_dataset_name) if self.test_dataset_name else None,
-            dataset_split=self.dataset_split, shuffle=self.shuffle_dataset, shuffle_seed=self.shuffle_seed,
-            batch_size=self.batch_size, max_image_side_length=self.max_image_side_length, augmentation=self.augmentation,
-            center_color_to_imagenet=self.center_color_to_imagenet, simplify_classes=self.simplify_classes, image_scale_mode=self.img_scale_mode,
-            pre_image_scale=self.pre_image_scale, split_by_filename_base=self.split_by_filename_base, max_examples_per_filename_base=self.max_examples_per_filename_base
-        )
+        train_datasets = []
+        val_datasets = []
+        test_datasets = []
 
-        self.__train_dataset.IMAGE_FACTOR = self.__val_dataset.IMAGE_FACTOR = self.__test_dataset.IMAGE_FACTOR = self.pre_image_scale
+        for dataset in datasets:
+            # Transformations
+            augmentation = self.inflate_augmentation(dataset.get('augmentation', {}))
+            # if self.augmentation and type(self.augmentation) == dict:
+            #     self.augmentation = self.inflate_augmentation(self.augmentation)
+            train_dataset, val_dataset, test_dataset = self.dataset_class.create_datasets(
+                train_dataset_path=join(self.data_root, dataset.get('name')),
+                dataset_split=dataset.get('split'),
+                shuffle=self.shuffle_dataset,
+                shuffle_seed=self.shuffle_seed,
+                batch_size=self.batch_size,
+                max_image_side_length=self.max_image_side_length,
+                augmentation=augmentation,
+                center_color_to_imagenet=self.center_color_to_imagenet,
+                simplify_classes=self.simplify_classes,
+                image_scale_mode=self.img_scale_mode,
+                pre_image_scale=self.pre_image_scale,
+                split_by_filename_base=dataset.get('split_by_filename_base'),
+                max_examples_per_filename_base=dataset.get('max_examples_per_filename_base', 0)
+            )
 
-        self.class_names = self.__train_dataset.get_label_names()
+            train_dataset.IMAGE_FACTOR = val_dataset.IMAGE_FACTOR = test_dataset.IMAGE_FACTOR = dataset.get('pre_image_scale', 0.5)
+
+            self.class_names = train_dataset.get_label_names()
+
+            train_datasets.append(train_dataset)
+            val_datasets.append(val_dataset)
+            test_datasets.append(test_dataset)
+
+        self.__train_dataset = UnionDataset(train_datasets)
+        self.__val_dataset = UnionDataset(val_datasets)
+        self.__test_dataset = UnionDataset(test_datasets)
 
     def get_datasets(self) -> Tuple[AbstractDataset, AbstractDataset, AbstractDataset]:
         return self.__train_dataset, self.__val_dataset, self.__test_dataset
@@ -248,7 +280,7 @@ class Environment:
 
         # Check datasets
         if self.purpose == ModelPurposeEnum.TRAINING:
-            if self.train_dataset_name is None:
+            if len(self.datasets) <= 0 and self.train_dataset_name is None:
                 raise ValueError('Please specify at least a training dataset name if you intend to train the model.')
 
             for dataset_name in (self.train_dataset_name, self.val_dataset_name, self.test_dataset_name):

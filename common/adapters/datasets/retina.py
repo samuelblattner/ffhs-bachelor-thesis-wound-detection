@@ -160,7 +160,7 @@ class RetinaDataset(AbstractDataset, Generator):
         # # Image.fromarray(draw.astype(np.uint8)).show()
         # from matplotlib import pyplot as plt
         # plt.figure(figsize=(20, 20))
-        # plt.axis('off')
+        # # plt.axis('off')
         # try:
         #     plt.imshow(draw.astype(np.uint8))
         # except:
@@ -169,7 +169,6 @@ class RetinaDataset(AbstractDataset, Generator):
         #
         # # print(batch_of_input_images.shape)
         #
-
         # exit(0)
         # ==========================
         # ==========================

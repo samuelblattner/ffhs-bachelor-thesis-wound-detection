@@ -199,14 +199,15 @@ class ModelSuite:
             if self.env.eval_images:
                 self.model.generate_inference_heatmaps(raw_image, axs[i, 1:])
 
-            mask_data = test_dataset._masks.get(image_info.get('id')).get('masks_raw')
+            mask_data, label_data = test_dataset.load_mask(i, True)
+            #test_dataset._masks.get(image_info.get('id')).get('masks_raw')
 
             if not annotations_loaded.get(i, False):
 
-                for minfo in mask_data:
-                    b = minfo.get('bbox')
+                for box, label in zip(mask_data, label_data):
+                    b = box
                     f = test_dataset.IMAGE_FACTOR
-                    all_annotations[i][minfo.get('category_id')].append(
+                    all_annotations[i][label].append(
                         [b[0] * f, b[1] * f, (b[0] + b[2]) * f, (b[1] + b[3]) * f])
 
                 annotations_loaded[i] = True

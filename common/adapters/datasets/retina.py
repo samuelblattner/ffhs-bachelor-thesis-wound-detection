@@ -21,6 +21,7 @@ class RetinaDataset(AbstractDataset, Generator):
                                             image_scale_mode, pre_image_scale)
 
         self.center_color_to_imagenet = True
+
     # ==================== BaseDataset Methods =========================
     def compile_dataset(self):
         self.group_method = 'ratio'
@@ -102,7 +103,10 @@ class RetinaDataset(AbstractDataset, Generator):
         }
 
     def get_x_y(self, indices: List[int]):
-        batch_of_input_images, batch_of_mask_sets, batch_of_bbox_sets, batch_of_label_sets, num_labels = super(RetinaDataset, self)._get_x_y(indices, autoscale=True, use_masks=False, do_preprocessing=True)
+        batch_of_input_images, batch_of_mask_sets, batch_of_bbox_sets, batch_of_label_sets, num_labels = super(RetinaDataset, self)._get_x_y(indices,
+                                                                                                                                             autoscale=True,
+                                                                                                                                             use_masks=False,
+                                                                                                                                             do_preprocessing=True)
         batch_size = len(batch_of_input_images)
 
         max_mask_set_size = 0
@@ -120,7 +124,6 @@ class RetinaDataset(AbstractDataset, Generator):
         annotations = []
 
         for batch, sets in enumerate(zip(batch_of_bbox_sets, batch_of_label_sets)):
-
             mask_set, label_set = sets
             bboxes[batch, :mask_set.shape[0]] = mask_set
             annotations.append({
@@ -170,6 +173,7 @@ class RetinaDataset(AbstractDataset, Generator):
         # # print(batch_of_input_images.shape)
         #
         # exit(0)
+
         # ==========================
         # ==========================
 

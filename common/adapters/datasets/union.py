@@ -111,5 +111,6 @@ class UnionDataset(AbstractDataset, Generator):
         Keras sequence method for generating batches.
         """
         # group = self.groups[index]
-        dataset, local_idx = self.__get_dataset_for_idx(index)
+        group = self.groups[index]
+        dataset, local_idx = self.__get_dataset_for_idx(group[0])
         return dataset.__getitem__(local_idx)

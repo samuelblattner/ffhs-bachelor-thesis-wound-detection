@@ -1,0 +1,89 @@
+{
+  "name": "0033c Joint Training of Puppet and Cases and Closeups and Closeupsconf",
+  "description": "Transfer Learning, Augmentation 1x to 10x",
+  "batch_size": 1,
+  "epochs": 1000,
+  "max_image_side_length": 512,
+  "datasets": [
+    {
+      "name": "puppet_measure_bands",
+      "split": [
+        1.0,
+        0,
+        0
+      ],
+      "augmentation": {
+        "type": "affine",
+        "params": {
+          "scale": "(1.0, 6.0)",
+          "translate_percent": {
+            "x": "(-0.5, 0.5)",
+            "y": "(-0.5, 0.5)"
+          }
+        }
+      }
+    },
+    {
+      "name": "cases",
+      "split": [
+        0.67,
+        0.165,
+        0.165
+      ],
+      "split_by_filename_base": true,
+      "augmentation": {
+        "type": "affine",
+        "params": {
+          "scale": "(1.0, 6.0)",
+          "translate_percent": {
+            "x": "(-0.5, 0.5)",
+            "y": "(-0.5, 0.5)"
+          }
+        }
+      }
+    },
+    {
+      "name": "closeup_wounds",
+      "split": [
+        0.7,
+        0.3,
+        0
+      ],
+      "augmentation": {
+        "type": "affine",
+        "params": {
+          "scale": "(1.0, 3.0)",
+          "translate_percent": {
+            "x": "(-0.5, 0.5)",
+            "y": "(-0.5, 0.5)"
+          }
+        }
+      }
+    },
+    {
+      "name": "closeup_wounds_confidential",
+      "split": [
+        0.7,
+        0.3,
+        0
+      ],
+      "augmentation": {
+        "type": "affine",
+        "params": {
+          "scale": "(1.0, 3.0)",
+          "translate_percent": {
+            "x": "(-0.5, 0.5)",
+            "y": "(-0.5, 0.5)"
+          }
+        }
+      }
+    }
+  ],
+  "shuffle_dataset": true,
+  "shuffle_seed": 2,
+  "learning_rate": 0.0001,
+  "use_transfer_learning": true,
+  "allow_base_layer_training": true,
+  "center_color_to_imagenet": true,
+  "simplify_classes": true
+}

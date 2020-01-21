@@ -200,15 +200,11 @@ class ModelSuite:
                 self.model.generate_inference_heatmaps(raw_image, axs[i, 1:])
 
             mask_data, label_data = test_dataset.load_mask(i, True)
-            #test_dataset._masks.get(image_info.get('id')).get('masks_raw')
 
             if not annotations_loaded.get(i, False):
 
                 for box, label in zip(mask_data, label_data):
-                    b = box
-                    f = test_dataset.IMAGE_FACTOR
-                    all_annotations[i][label].append(
-                        [b[0] * f, b[1] * f, (b[0] + b[2]) * f, (b[1] + b[3]) * f])
+                    all_annotations[i][int(label)].append(box)
 
                 annotations_loaded[i] = True
 
@@ -352,6 +348,8 @@ class ModelSuite:
                     '{:0.2f}'.format((2 * prec * rec / (prec + rec)) if prec > 0 and rec > 0 else 0),
                     '{:0.2f}%'.format(val.get('map', 0) * 100)
                 )
+
+        os.makedirs(full_path, exist_ok=True)
 
         with open('{}/eval-{}{}.csv'.format(full_path, self.model.full_name, '-fullsize' if self.env.full_size_eval else ''), 'w', encoding='utf-8') as f:
             f.write(csv)

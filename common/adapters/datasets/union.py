@@ -76,7 +76,10 @@ class UnionDataset(AbstractDataset, Generator):
         return sum([d.size() for d in self.datasets])
 
     def num_classes(self):
-        return len(set(chain(*[d.get_label_names() for d in self.datasets])))
+        return len(self.get_label_names())
+
+    def get_label_names(self) -> List[str]:
+        return list(set(chain(*[d.get_label_names() for d in self.datasets])))
 
     def has_label(self, label):
         return any([d.has_label(label) for d in self.datasets])

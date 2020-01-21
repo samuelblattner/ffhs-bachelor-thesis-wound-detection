@@ -182,7 +182,7 @@ class BaseRetinaAdapter(AbstractModelAdapter):
             heatmap = np.mean(layer_values, axis=-1)
             # heatmap = np.abs(heatmap)
             # heatmap = np.maximum(heatmap, 0)
-            heatmap = (heatmap - np.min(heatmap)) / (np.max(heatmap) - np.min(heatmap))
+            heatmap = (heatmap - np.min(heatmap)) / (np.max(heatmap) - np.min(heatmap)) * (-1 if np.min(heatmap) < 0 else 1)
 
             heatmap = cv2.resize(heatmap, (image.shape[1], image.shape[0]))
             heatmap = np.uint8(255 * heatmap)

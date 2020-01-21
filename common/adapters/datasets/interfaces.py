@@ -117,7 +117,7 @@ class AbstractDataset:
             cls,
             train_dataset_path: str, val_dataset_path: str = None, test_dataset_path: str = None,
             dataset_split: Tuple = None, shuffle: bool = False, shuffle_seed: int = None, split_by_filename_base: bool = False,
-            max_examples_per_filename_base=0, **kwargs):
+            max_examples_per_filename_base=0, k_fold_x_val: int = 1, x_val_k: int = 0, **kwargs):
         """
         Factory method to create training-, validation- and test data from an external dataset.
         If no path is indicated for validation and test dataset, and a dataset_split tuple is
@@ -182,17 +182,27 @@ class AbstractDataset:
                     size=n_val,
                     replace=False
                 ))
-                test_image_ids = []
+
             else:
                 train_image_ids = [i for i in range(n_train)]
                 val_image_ids = [i for i in range(n_train, n_train + n_val)]
-                test_image_ids = []
 
             train_image_infos = []
             val_image_infos = []
             test_image_infos = []
 
             test_image_ids = list(filter(lambda i: i not in train_image_ids and i not in val_image_ids, range(n_images)))
+
+            if k_fold_x_val > 1:
+                all_ids = train_image_ids + val_image_ids + test_image_ids
+                shift = n_images / k_fold_x_val
+
+                cut_point = int(n_images - x_val_k * shift)
+                cut_off_end = all_ids[cut_point:]
+                all_ids = cut_off_end + all_ids[:cut_point]
+                train_image_ids = all_ids[:n_train]
+                val_image_ids = all_ids[n_train:n_train + n_val]
+                test_image_ids = all_ids[n_train+n_val:]
 
             if split_by_filename_base:
                 checked_ids = []
@@ -661,7 +671,7 @@ class AbstractDataset:
                 x1, y1, w, h = info.get('bbox')
                 boxes.append([x1, y1, x1 + w, y1 + h])
                 labels.append(info.get('category_id'))
-            return np.multiply(np.asarray(boxes), self.IMAGE_FACTOR), np.asarray(labels)
+            return np.multiply(np.array(boxes), self.IMAGE_FACTOR), np.array(labels)
 
             # mask_data = test_dataset._masks.get(image_info.get('id')).get('masks_raw')
 

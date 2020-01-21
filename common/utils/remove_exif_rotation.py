@@ -17,7 +17,9 @@ if __name__ == '__main__':
 
     for path, dirs, files in os.walk(args.base_dir):
 
-        for file in files:
+        for f, file in enumerate(files):
+
+            print('{}/{}'.format(f, len(files)))
 
             try:
                 im = Image.open(join(path, file))
@@ -51,4 +53,4 @@ if __name__ == '__main__':
             if mirror > 0:
                 im = ImageOps.mirror(im)
 
-            im.save(join(args.target_dir, file), 'JPEG')
+            im.save(join(args.target_dir, file), 'JPEG', quality=100)

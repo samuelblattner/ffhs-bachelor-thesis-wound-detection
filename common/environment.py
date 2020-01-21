@@ -12,6 +12,8 @@ from common.adapters.datasets.union import UnionDataset
 from common.enums import NeuralNetEnum, ModelPurposeEnum
 from neural_nets.retina_net.keras_retinanet.preprocessing.generator import Generator
 
+DEFAULT_DATASET_ROOT = join('/home/blsa/projects/confidential/wound-detection/data/',)
+
 AUGMENTATION_MAP = {
     'fliplr': imgaug.augmenters.Fliplr,
     'flipud': imgaug.augmenters.Flipud,
@@ -119,6 +121,8 @@ class Environment:
     gpu_no: int = 0
     full_size_eval: bool = False
     eval_images: bool = False
+    k_fold_x_val: int = 1
+    x_val_k: int = 0
 
     @classmethod
     def from_json(cls, path: str):
@@ -162,6 +166,8 @@ class Environment:
                 env.full_size_eval = config_dict.get('full_size_eval', env.full_size_eval)
                 env.data_root = config_dict.get('data_dir', env.data_root)
                 env.datasets = config_dict.get('datasets', [])
+                env.k_fold_x_val = config_dict.get('k_fold_x_val', env.k_fold_x_val)
+                env.x_val_k = config_dict.get('x_val_k', env.x_val_k)
 
                 return env
         except FileNotFoundError:
@@ -235,7 +241,9 @@ class Environment:
                 image_scale_mode=self.img_scale_mode,
                 pre_image_scale=self.pre_image_scale,
                 split_by_filename_base=dataset.get('split_by_filename_base'),
-                max_examples_per_filename_base=dataset.get('max_examples_per_filename_base', 0)
+                max_examples_per_filename_base=dataset.get('max_examples_per_filename_base', 0),
+                k_fold_x_val=self.k_fold_x_val,
+                x_val_k=self.x_val_k
             )
 
             train_dataset.IMAGE_FACTOR = val_dataset.IMAGE_FACTOR = test_dataset.IMAGE_FACTOR = dataset.get('pre_image_scale', 0.5)

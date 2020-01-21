@@ -4,12 +4,9 @@
   "batch_size": 1,
   "epochs": 1000,
   "max_image_side_length": 512,
-  "train_dataset_name": "closeup_wounds_confidential",
-  "dataset_split": [
-    0.67,
-    0.165,
-    0.165
-  ],
+  "pre_image_scale": 1.0,
+  "train_dataset_name": "body_shots",
+  "dataset_split": [0.0, 0.0, 1.0],
   "shuffle_dataset": true,
   "shuffle_seed": 3,
   "learning_rate": 0.0001,

@@ -1,6 +1,6 @@
 #/bin/bash
 
-python main.py --purpose train --env 0017e-TL-ImgAug-rot90-closeup-wounds-conf --gpu_no 2 --net_type retina-resnet152 --data_dir=/home/blsa/projects/confidential/wound-detection/data/ --checkpoint_dir=/home/blsa/projects/confidential/wound-detection/checkpoints/ > 0017e-retina152-train.log 2>&1
+python main.py --purpose train --env 0017e-TL-ImgAug-rot90-closeup-wounds-conf --gpu_no 3 --net_type retina-resnet152 --data_dir=/home/blsa/projects/confidential/wound-detection/data/ --checkpoint_dir=/home/blsa/projects/confidential/wound-detection/checkpoints/ > 0017e-retina152-train.log 2>&1
 python main.py --purpose evaluate --env 0017e-TL-ImgAug-rot90-closeup-wounds-conf --gpu_no 2 --net_type retina-resnet152 --data_dir=/home/blsa/projects/confidential/wound-detection/data/ --checkpoint_dir=/home/blsa/projects/confidential/wound-detection/checkpoints/ --eval_dir=/home/blsa/projects/confidential/evaluation/
 python main.py --purpose evaluate --env 0017e-TL-ImgAug-rot90-closeup-wounds-conf --gpu_no 2 --full_size_eval true --net_type retina-resnet152 --data_dir=/home/blsa/projects/confidential/wound-detection/data/ --checkpoint_dir=/home/blsa/projects/confidential/wound-detection/checkpoints/ --eval_dir=/home/blsa/projects/confidential/evaluation/
 

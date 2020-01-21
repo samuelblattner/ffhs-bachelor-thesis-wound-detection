@@ -80,7 +80,9 @@
     }
   ],
   "shuffle_dataset": true,
-  "shuffle_seed": 1,
+  "shuffle_seed": 0,
+  "k_fold_x_val": 4,
+  "x_val_k": 1,
   "learning_rate": 0.0001,
   "use_transfer_learning": true,
   "allow_base_layer_training": true,

@@ -212,12 +212,12 @@ class AbstractDataset:
                         checked_ids.append(image_id)
 
                         image_info = all_image_infos[image_id]
-                        file_name_base = re.findall(r'([\w\d]{32}-)', image_info.get('path'))
+                        file_name_base = re.search(r'([\w\d]{16}).*-\d+\.jpg', image_info.get('path'))
 
                         if not file_name_base:
                             continue
 
-                        file_name_base = file_name_base[0]
+                        file_name_base = file_name_base.group(1)
 
                         train_deficit = n_train - len(train_image_ids)
                         val_deficit = n_val - len(val_image_ids)
@@ -245,18 +245,27 @@ class AbstractDataset:
 
                                 source.pop(source.index(remove_id))
 
+            for image_id in range(n_images):
+                if image_id in train_image_ids:
+                    train_image_infos.append(all_image_infos[image_id])
+                elif image_id in val_image_ids:
+                    val_image_infos.append(all_image_infos[image_id])
+                else:
+                    test_image_infos.append(all_image_infos[image_id])
+                    test_image_ids.append(image_id)
+
             if max_examples_per_filename_base > 0:
                 file_name_bases_count = {}
                 images_info_sets = (
                     (train_image_ids, train_image_infos),
                     (val_image_ids, val_image_infos),
-                    (test_image_ids, test_image_ids)
+                    (test_image_ids, test_image_infos)
                 )
                 for image_ids, image_infos in images_info_sets:
                     remove_ids = []
                     for image_id, image_info in zip(image_ids, image_infos):
 
-                        file_name_base = re.findall(r'([\w\d]{32}-)', image_info.get('path'))
+                        file_name_base = re.findall(r'([\w\d_-]{32}-)', image_info.get('path'))
                         if not file_name_base:
                             continue
 
@@ -271,19 +280,10 @@ class AbstractDataset:
 
                     for remove_id in remove_ids:
                         image_infos.pop(image_ids.index(remove_id))
-                        image_ids.remove(image_ids.index(remove_id))
-
-            for image_id in range(n_images):
-                if image_id in train_image_ids:
-                    train_image_infos.append(all_image_infos[image_id])
-                elif image_id in val_image_ids:
-                    val_image_infos.append(all_image_infos[image_id])
-                else:
-                    test_image_infos.append(all_image_infos[image_id])
-                    test_image_ids.append(image_id)
+                        image_ids.remove(remove_id)
 
             # print('Train:')
-            # for info in train_image_infos:
+            # for info in sorted(train_image_infos, key=lambda t: t.get('path')):
             #     print(info.get('path'), end='')
             #     for other in (val_image_infos, test_image_infos):
             #         for info2 in other:
@@ -294,7 +294,7 @@ class AbstractDataset:
             #         print('')
             #
             # print('Val:')
-            # for info in val_image_infos:
+            # for info in sorted(val_image_infos, key=lambda t: t.get('path')):
             #     print(info.get('path'), end = '')
             #     for info2 in test_image_infos:
             #         if info.get('path') == info2.get('path'):
@@ -303,9 +303,10 @@ class AbstractDataset:
             #     else:
             #         print('')
             # print('Test:')
-            # for info in test_image_infos:
+            # for info in sorted(test_image_infos, key=lambda t: t.get('path')):
             #     print(info.get('path'))
-
+            #
+            # exit(0)
             train_dataset.set_image_info(train_image_infos)
             val_dataset.set_image_info(val_image_infos)
             test_dataset.set_image_info(test_image_infos)

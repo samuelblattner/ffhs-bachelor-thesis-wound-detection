@@ -1,0 +1,21 @@
+{
+  "name": "0032a Joint Training of Puppet and Cases and Closeups",
+  "description": "Transfer Learning, Augmentation 1x to 10x",
+  "batch_size": 1,
+  "epochs": 1000,
+  "max_image_side_length": 512,
+  "datasets": [
+    {
+      "name": "cases",
+      "split": [0.0, 0.0, 1.0],
+      "split_by_filename_base": true
+    }
+  ],
+  "shuffle_dataset": true,
+  "shuffle_seed": 0,
+  "learning_rate": 0.0001,
+  "use_transfer_learning": true,
+  "allow_base_layer_training": true,
+  "center_color_to_imagenet": true,
+  "simplify_classes": true
+}

@@ -1,0 +1,26 @@
+{
+  "name": "0014 All Cases Transfer ImgAug Puppetbase Max 3",
+  "description": "All Cases dataset, Transfer Learning, Augmentation 1x to 7x, All Cases dataset, puppet weight base 0006",
+  "batch_size": 1,
+  "epochs": 1000,
+  "max_image_side_length": 512,
+  "train_dataset_name": "cases",
+  "dataset_split": [0, 0, 1.0],
+  "shuffle_dataset": true,
+  "shuffle_seed": 0,
+  "learning_rate": 0.0001,
+  "use_transfer_learning": true,
+  "allow_base_layer_training": true,
+  "gpu_no": 2,
+  "augmentation": {
+    "type": "affine",
+    "params": {
+      "scale": "(1.0, 7.0)",
+      "translate_percent": {
+        "x": "(-0.5, 0.5)",
+        "y": "(-0.5, 0.5)"
+      }
+    }
+  },
+  "simplify_classes": true
+}

@@ -20,6 +20,7 @@ from common.adapters.models.interfaces import AbstractModelAdapter
 from common.enums import ModelPurposeEnum
 from common.environment import Environment
 from config import ENVIRONMENT_ROOT, NET_MAP, DATASET_CLASS_MAP, FACTORY_MAP
+from matplotlib import pyplot as plt
 
 
 class ModelSuite:
@@ -83,6 +84,8 @@ class ModelSuite:
                             required=False)
         parser.add_argument('--data_dir', help='Base directory for datasets. Default: ./data', default='./data', type=str, required=False)
         parser.add_argument('--eval_dir', help='Evaluation directory', default='./evaluation', type=str, required=False)
+        parser.add_argument('--eval_heatmaps', help='Stores and displays evaluation heatmaps if enabled', default=False, required=False, action='store_true')
+        parser.add_argument('--eval_heatmaps_overview', help='Stores and displays evaluation heatmaps overview if enabled', default=False, required=False, action='store_true')
         parser.add_argument('--eval_images', help='Stores and displays evaluation images if enabled', default=False, required=False, action='store_true')
         parser.add_argument('--full_size_eval', help='Full Size Eval', default=False, type=bool, required=False)
         parser.add_argument('--gpu_no', help='GPU no', default=0, type=int, required=False)
@@ -112,6 +115,8 @@ class ModelSuite:
         env.evaluation_dir = args.eval_dir
         env.gpu_no = args.gpu_no
         env.full_size_eval = args.full_size_eval
+        env.eval_heatmaps = args.eval_heatmaps
+        env.eval_heatmaps_overview = args.eval_heatmaps_overview
         env.eval_images = args.eval_images
         env.validate()
         env.prepare()
@@ -188,16 +193,21 @@ class ModelSuite:
         # self.model.train_model[0].summary()
         # self.model.train_model[1].summary()
 
-        if self.env.eval_images:
-            from matplotlib import pyplot as plt
+        if self.env.eval_heatmaps_overview:
             fig, axs = plt.subplots(len(test_dataset.get_image_info()), 2, figsize=(10, 60))
+
+        if self.env.eval_heatmaps:
+            fullsize_fig, fullsize_axs = plt.subplots(1, 1, figsize=(20,20))
 
         for i, image_info in enumerate(test_dataset.get_image_info()):
             raw_image = test_dataset.load_image(i)
             dets = self.model.predict([raw_image], min_score)[0]
 
-            if self.env.eval_images:
+            if self.env.eval_heatmaps_overview:
                 self.model.generate_inference_heatmaps(raw_image, axs[i, 1:])
+
+            if self.env.eval_heatmaps:
+                self.model.generate_inference_heatmaps(raw_image, [fullsize_axs])
 
             mask_data, label_data = test_dataset.load_mask(i, True)
 
@@ -236,14 +246,36 @@ class ModelSuite:
                         color=(32, 245, 255),
                         thickness=3)
 
-            if self.env.eval_images:
+            # if self.env.eval_heatmaps:
 
-                axs[i, 0].imshow(raw_image.astype(np.uint8))
+                # axs[i, 0].imshow(raw_image.astype(np.uint8))
 
                 # plt.show()
                 # exit(0)
+            if self.env.eval_images:
+                # plt.show()
+                os.makedirs(full_path, exist_ok=True)
+                with open('{}/eval-{}{}-{}.png'.format(
+                        full_path,
+                        self.model.full_name,
+                        '-fullsize' if self.env.full_size_eval else '',
+                        i
+                ), 'wb') as f:
+                    Image.fromarray(raw_image.astype(np.uint8)).save(f)
 
-        if self.env.eval_images:
+            if self.env.eval_heatmaps:
+                # plt.show()
+                os.makedirs(full_path, exist_ok=True)
+                with open('{}/eval-{}{}-{}-heatmap.png'.format(
+                        full_path,
+                        self.model.full_name,
+                        '-fullsize' if self.env.full_size_eval else '',
+                        i
+                ), 'wb') as f:
+                    fullsize_fig.savefig(f, format='png')
+                    # Image.fromarray(fullsize_fig.astype(np.uint8)).save(f)
+
+        if self.env.eval_heatmaps_overview:
             plt.show()
             os.makedirs(full_path, exist_ok=True)
             with open('{}/eval-{}{}.pdf'.format(full_path, self.model.full_name, '-fullsize' if self.env.full_size_eval else ''), 'wb') as f:

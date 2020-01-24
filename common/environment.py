@@ -120,6 +120,8 @@ class Environment:
     max_examples_per_filename_base: int = 0
     gpu_no: int = 0
     full_size_eval: bool = False
+    eval_heatmaps: bool = False
+    eval_heatmaps_overview: bool = False
     eval_images: bool = False
     k_fold_x_val: int = 1
     x_val_k: int = 0

@@ -10,7 +10,7 @@ import numpy as np
 from PIL import Image, ImageDraw
 from imgaug import BoundingBoxesOnImage, BoundingBox
 from imgaug.augmenters import Augmenter, CropToFixedSize
-
+from neural_nets.retina_net.keras_retinanet.utils.image import resize_image as retina_resize_image
 from common.utils.images import resize_image, resize_mask, extract_bboxes
 
 
@@ -70,8 +70,8 @@ class AbstractDataset:
     # Methods
     # =======
 
-    def __init__(self, dataset_path: str, simplify_classes: bool = False, batch_size: int = 1, max_image_side_length: int = 512,
-                 augmentation: Augmenter = None, center_color_to_imagenet: bool = False, image_scale_mode: str = 'square', pre_image_scale=0.5):
+    def __init__(self, dataset_path: str, simplify_classes: bool = False, batch_size: int = 1, max_image_side_length: int = 1333,
+                 augmentation: Augmenter = None, center_color_to_imagenet: bool = False, image_scale_mode: str = 'square', pre_image_scale=0.5, min_image_side_length: int = 800,):
         """
         Initialization of dataset generator.
 
@@ -106,6 +106,7 @@ class AbstractDataset:
         self.simplify_classes = simplify_classes
         self.batch_size = batch_size
         self.max_image_side_length = max_image_side_length
+        self.min_image_side_length = min_image_side_length
         self.augmentation = augmentation
         self.center_color_to_imagenet = center_color_to_imagenet
         self.image_scale_mode = image_scale_mode
@@ -500,7 +501,7 @@ class AbstractDataset:
                         masks[:, 3] = np.multiply(masks[:, 3], s_h)
 
                 image, w, scale, p, c = resize_image(
-                    image, max_dim=self.max_image_side_length, min_dim=self.max_image_side_length
+                    image, max_dim=self.max_image_side_length, min_dim=self.min_image_side_length
                 )
 
                 # print(w, p, c, scale)

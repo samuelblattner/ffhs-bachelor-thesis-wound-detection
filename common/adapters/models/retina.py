@@ -3,11 +3,12 @@ from typing import List, Tuple
 import cv2
 import keras
 import numpy as np
+from PIL import Image
 from keras import Model
 from common.adapters.models.interfaces import AbstractModelAdapter
 from common.detection import Detection
 from common.environment import Environment
-from common.utils.images import resize_image
+# from common.utils.images import resize_image
 from neural_nets.retina_net.keras_retinanet import models, losses
 from neural_nets.retina_net.keras_retinanet.bin.train import create_models
 import keras.backend as K
@@ -37,6 +38,7 @@ import keras.backend as K
 #     precision = precision_m(y_true, y_pred)
 #     recall = recall_m(y_true, y_pred)
 #     return 2 * ((precision * recall) / (precision + recall + K.epsilon()))
+from neural_nets.retina_net.keras_retinanet.utils.image import resize_image
 
 
 class BaseRetinaAdapter(AbstractModelAdapter):
@@ -58,6 +60,7 @@ class BaseRetinaAdapter(AbstractModelAdapter):
         self.env.img_scale_mode = 'just'
         self.env.center_color_to_imagenet = True
 
+        print('Using backbone: ', self.env.use_transfer_learning)
         print('Freezing backbone: ', self.env.use_transfer_learning and not self.env.allow_base_layer_training)
 
         train_dataset, _, __ = self.env.get_datasets()
@@ -101,13 +104,25 @@ class BaseRetinaAdapter(AbstractModelAdapter):
             image[..., 1] -= 116.779  # G
             image[..., 2] -= 103.939  # B
 
-            initial_width = images[0].shape[1]
+            initial_height, initial_width = image.shape[0], image.shape[1]
 
             # Scale image to target size
             if not self.env.full_size_eval:
-                image, w, scale, p, c = resize_image(
-                    images[0], max_dim=self.env.max_image_side_length,
-                )
+
+                print(initial_width, initial_height)
+
+                # image, w, scale, p, c = resize_image(
+                #     images[0], max_dim=self.env.max_image_side_length, min_dim=self.env.min_image_side_length
+                # )
+
+                image, scale = resize_image(image, self.env.min_image_side_length, self.env.max_image_side_length)
+
+                print(image.shape, scale)
+                # from matplotlib import pyplot as plt
+                # plt.imshow(image.astype('uint8'))
+                # plt.show()
+                # exit(0)
+
 
                 new_width = int((initial_width * scale))
                 remove = int((image.shape[1] - new_width) / 2)

@@ -19,7 +19,7 @@ apt-get install python3-venv
 
 4. Install requirements
 
-        $ pip install requirements.txt    
+        $ pip install -r requirements.txt    
    
 4. Compile external dependencies
 

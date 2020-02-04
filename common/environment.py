@@ -48,7 +48,10 @@ class Environment:
     epochs: int = 1
 
     #: Max size of longer image side
-    max_image_side_length: int = 768
+    max_image_side_length: int = 1333
+
+    #: Min size of shorter image side
+    min_image_side_length: int = 800
 
     #: Whether to use transfer learning (i.e. pre-trained feature/backbone weights) or not
     use_transfer_learning: bool = False
@@ -148,6 +151,7 @@ class Environment:
                 env.batch_size = config_dict.get('batch_size', env.batch_size)
                 env.epochs = config_dict.get('epochs', env.epochs)
                 env.max_image_side_length = config_dict.get('max_image_side_length', env.max_image_side_length)
+                env.min_image_side_length = config_dict.get('min_image_side_length', env.min_image_side_length)
                 env.use_transfer_learning = config_dict.get('use_transfer_learning', env.use_transfer_learning)
                 env.allow_base_layer_training = config_dict.get('allow_base_layer_training', env.allow_base_layer_training)
                 env.extract_wound_patches = config_dict.get('extract_wound_patches', env.extract_wound_patches)
@@ -189,6 +193,8 @@ class Environment:
                 self.replace_tuples(val)
 
     def inflate_augmentation(self, params: dict):
+        if params is None:
+            return None
         aug_class = AUGMENTATION_MAP.get(params.get('type'))
         if aug_class is None:
             return None
@@ -218,7 +224,7 @@ class Environment:
             'pre_image_scale': self.pre_image_scale,
             'split_by_filename_base': self.split_by_filename_base,
             'max_examples_per_filename_base': self.max_examples_per_filename_base,
-            'augmentation': self.augmentation
+            'augmentation': self.inflate_augmentation(self.augmentation) if self.augmentation else None
         }]
 
         train_datasets = []
@@ -241,7 +247,7 @@ class Environment:
                 center_color_to_imagenet=self.center_color_to_imagenet,
                 simplify_classes=self.simplify_classes,
                 image_scale_mode=self.img_scale_mode,
-                pre_image_scale=self.pre_image_scale,
+                pre_image_scale=dataset.get('pre_image_scale'),
                 split_by_filename_base=dataset.get('split_by_filename_base'),
                 max_examples_per_filename_base=dataset.get('max_examples_per_filename_base', 0),
                 k_fold_x_val=self.k_fold_x_val,

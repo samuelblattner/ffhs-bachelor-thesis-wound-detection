@@ -1,28 +1,57 @@
-from typing import List
+from typing import List, Tuple
 
+from imgaug.augmenters import Augmenter
 import cv2
 import numpy as np
-from imgaug.augmenters import Augmenter
 
-from common.utils.images import draw_box
 from neural_nets.retina_net.keras_retinanet.preprocessing.generator import Generator
 from neural_nets.retina_net.keras_retinanet.utils.anchors import anchor_targets_bbox, guess_shapes
 from neural_nets.retina_net.keras_retinanet.utils.image import TransformParameters, preprocess_image
 
 from common.adapters.datasets.interfaces import AbstractDataset
+from common.utils.images import draw_box
 
 
 class RetinaDataset(AbstractDataset, Generator):
 
-    def __init__(self, dataset_path: str, simplify_classes: bool = False, batch_size: int = 1, max_image_side_length: int = 512,
-                 augmentation: Augmenter = None, center_color_to_imagenet: bool = False, image_scale_mode: str = 'square', pre_image_scale=0.5):
+    def __init__(self,
+                 dataset_path: str,
+                 simplify_classes: bool = False,
+                 batch_size: int = 1,
+                 max_image_side_length: int = 512,
+                 augmentation: Augmenter = None,
+                 center_color_to_imagenet: bool = False,
+                 image_scale_mode: str = 'square',
+                 pre_image_scale=0.5):
 
         super(RetinaDataset, self).__init__(dataset_path, simplify_classes, batch_size, max_image_side_length, augmentation, center_color_to_imagenet,
                                             image_scale_mode, pre_image_scale)
 
         self.center_color_to_imagenet = True
 
+        if max_image_side_length is None:
+            self.max_image_side_length = 1333
+            self.min_image_side_length = 800
+
     # ==================== BaseDataset Methods =========================
+    @classmethod
+    def combine_x_y(cls, x_y_list: List[Tuple], num_items: int):
+
+        images = [None] * num_items
+        all_regressions = [None] * num_items
+        all_labels = [None] * num_items
+
+        for x_y, batch_idx in x_y_list:
+            image_batch, target_batch = x_y
+            regression_batch, label_batch = target_batch[0], target_batch[1]
+            for image, regressions, labels, idx in zip(image_batch, regression_batch, label_batch, batch_idx):
+
+                images[idx] = image
+                all_regressions[idx] = regressions
+                all_labels[idx] = labels
+
+        return np.array(images, dtype='float32'), [all_regressions, all_labels]
+
     def compile_dataset(self):
         self.group_method = 'ratio'
         self.shuffle_groups = False
@@ -50,6 +79,8 @@ class RetinaDataset(AbstractDataset, Generator):
         pass
 
     # ================== Generator Methods =============================
+    def image_path(self, image_index):
+        pass
 
     def size(self):
         return len(self.get_image_info())
@@ -103,82 +134,74 @@ class RetinaDataset(AbstractDataset, Generator):
         }
 
     def get_x_y(self, indices: List[int]):
-        batch_of_input_images, batch_of_mask_sets, batch_of_bbox_sets, batch_of_label_sets, num_labels = super(RetinaDataset, self)._get_x_y(indices,
-                                                                                                                                             autoscale=True,
-                                                                                                                                             use_masks=False,
-                                                                                                                                             do_preprocessing=True)
-        batch_size = len(batch_of_input_images)
+        """
+        Create arrays for input and targets for Retina Net
 
-        max_mask_set_size = 0
-        for mask_set in batch_of_bbox_sets:
-            max_mask_set_size = max(max_mask_set_size, mask_set.shape[0])
-
-        # Prepare arrays
-        bboxes = np.zeros((batch_size, max_mask_set_size, 4))
-        labels = np.zeros((batch_size, max_mask_set_size, num_labels + 1))
-
-        # Reset all to 'ignore' (-1)
-        bboxes[:, :, -1] = -1
-        labels[:, :, -1] = -1
+        :param indices: List of image indices to produce
+        :type indices: List[int]
+        :return: Tuple of:
+        - Batch of images
+        - Tuple of:
+        -- Batch of box sets, one set of boxes for each image
+        -- Batch of label sets, one set of labels for each image
+        """
 
         annotations = []
+        batch_of_input_images, batch_of_mask_sets, batch_of_bbox_sets, batch_of_label_sets, num_labels = super(RetinaDataset, self)._get_x_y(
+            indices=indices,
+            autoscale=True,
+            use_masks=False,
+            do_preprocessing=True)
 
-        for batch, sets in enumerate(zip(batch_of_bbox_sets, batch_of_label_sets)):
-            mask_set, label_set = sets
-            bboxes[batch, :mask_set.shape[0]] = mask_set
+        # Extract boxes
+        for batch, sets in enumerate(zip(batch_of_input_images, batch_of_bbox_sets, batch_of_label_sets)):
+            image, box_set, label_set = sets
             annotations.append({
-                'bboxes': bboxes[batch],
+                'bboxes': box_set,
                 'labels': label_set
             })
 
-            # for b, box in enumerate(bboxes[batch]):
-            #     y1, x1, y2, x2 = box
-            #     bboxes[batch][b] = np.array((x1, y1, x2, y2))
+            # Uncomment for DEBUG
+            # ==========================
+            # ==========================
+            # draw = image.copy()
+            #
+            # draw[..., 0] += 123.68  # R
+            # draw[..., 1] += 116.779  # G
+            # draw[..., 2] += 103.939  # B
+            #
+            # for ann in annotations:
+            #
+            #     for box in ann.get('bboxes'):
+            #         print(box)
+            #         draw_box(draw, [int(box[1]), int(box[0]), int(box[3]), int(box[2])], color=(255, 200, 0))
+            #         caption = "{} {:.3f}".format('hur', 0)
+            #
+            #         # print(self.labels.index(obj['name'])  )
+            #
+            #         cv2.putText(
+            #             img=draw,
+            #             text=caption,
+            #             org=(int(box[0]), int(box[1]) - 10),
+            #             fontFace=cv2.FONT_HERSHEY_PLAIN,
+            #             fontScale=1,
+            #             color=(255, 200, 0),
+            #             thickness=1)
+            #
+            # from matplotlib import pyplot as plt
+            # plt.figure()
+            # try:
+            #     plt.imshow(draw.astype(np.uint8))
+            # except:
+            #     pass
+            # plt.show()
+            #
+            # exit(0)
+            # ==========================
+            # ==========================
 
-        # ==========================
-        # ==========================
-        # draw = batch_of_input_images[0].copy()
-        #
-        # draw[..., 0] += 123.68  # R
-        # draw[..., 1] += 116.779  # G
-        # draw[..., 2] += 103.939  # B
-        #
-        # print(draw.shape)
-        # for ann in annotations:
-        #     for box in ann.get('bboxes'):
-        #         draw_box(draw, [int(box[1]), int(box[0]), int(box[3]), int(box[2])], color=(255, 200, 0))
-        #         caption = "{} {:.3f}".format('hur', 0)
-        #
-        #         # print(self.labels.index(obj['name'])  )
-        #
-        #         cv2.putText(
-        #             img=draw,
-        #             text=caption,
-        #             org=(int(box[0]), int(box[1]) - 10),
-        #             fontFace=cv2.FONT_HERSHEY_PLAIN,
-        #             fontScale=1,
-        #             color=(255, 200, 0),
-        #             thickness=1)
-        #
-        # # Image.fromarray(draw.astype(np.uint8)).show()
-        # from matplotlib import pyplot as plt
-        # plt.figure(figsize=(20, 20))
-        # # plt.axis('off')
-        # try:
-        #     plt.imshow(draw.astype(np.uint8))
-        # except:
-        #     pass
-        # plt.show()
-        #
-        # # print(batch_of_input_images.shape)
-        #
-        # exit(0)
-
-        # ==========================
-        # ==========================
-
+        # Compute regression targets
         targets = self.compute_targets(batch_of_input_images, annotations)
-
         batch_of_input_images = np.asarray(batch_of_input_images, dtype=np.float32)
         return batch_of_input_images, list(targets)
 

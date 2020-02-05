@@ -60,7 +60,7 @@ class BaseRetinaAdapter(AbstractModelAdapter):
         self.env.img_scale_mode = 'just'
         self.env.center_color_to_imagenet = True
 
-        print('Using backbone: ', self.env.use_transfer_learning)
+        print('Using Transfer Learning: ', self.env.use_transfer_learning)
         print('Freezing backbone: ', self.env.use_transfer_learning and not self.env.allow_base_layer_training)
 
         train_dataset, _, __ = self.env.get_datasets()

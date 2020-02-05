@@ -3,14 +3,85 @@ from typing import List, Tuple
 
 from keras import Model
 from keras.callbacks import Callback, ModelCheckpoint
+import tensorflow as tf
+from keras.optimizers import Adam
 
 from common.adapters.datasets.interfaces import AbstractDataset
 from common.adapters.models.interfaces import AbstractModelAdapter
 from common.detection import Detection
 from common.enums import ModelPurposeEnum
 from common.environment import Environment
-from neural_nets.yolo_3.train import create_model, create_callbacks
+from neural_nets.yolo_3.train import create_callbacks
+from neural_nets.yolo_3.utils.multi_gpu_model import multi_gpu_model
 from neural_nets.yolo_3.utils.utils import get_yolo_boxes
+from neural_nets.yolo_3.yolo import create_yolov3_model, dummy_loss
+
+
+def create_model(
+    nb_class,
+    anchors,
+    max_box_per_image,
+    max_grid, batch_size,
+    warmup_batches,
+    ignore_thresh,
+    multi_gpu,
+    saved_weights_name,
+    lr,
+    grid_scales,
+    obj_scale,
+    noobj_scale,
+    xywh_scale,
+    class_scale,
+    use_transfer_learning=False
+):
+    if multi_gpu > 1:
+        with tf.device('/cpu:0'):
+            template_model, infer_model = create_yolov3_model(
+                nb_class            = nb_class,
+                anchors             = anchors,
+                max_box_per_image   = max_box_per_image,
+                max_grid            = max_grid,
+                batch_size          = batch_size//multi_gpu,
+                warmup_batches      = warmup_batches,
+                ignore_thresh       = ignore_thresh,
+                grid_scales         = grid_scales,
+                obj_scale           = obj_scale,
+                noobj_scale         = noobj_scale,
+                xywh_scale          = xywh_scale,
+                class_scale         = class_scale
+            )
+    else:
+        template_model, infer_model = create_yolov3_model(
+            nb_class            = nb_class,
+            anchors             = anchors,
+            max_box_per_image   = max_box_per_image,
+            max_grid            = max_grid,
+            batch_size          = batch_size,
+            warmup_batches      = warmup_batches,
+            ignore_thresh       = ignore_thresh,
+            grid_scales         = grid_scales,
+            obj_scale           = obj_scale,
+            noobj_scale         = noobj_scale,
+            xywh_scale          = xywh_scale,
+            class_scale         = class_scale
+        )
+
+    # load the pretrained weight if exists, otherwise load the backend weight only
+    if os.path.exists(saved_weights_name):
+        print("\nLoading pretrained weights.\n")
+        template_model.load_weights(saved_weights_name)
+    elif use_transfer_learning:
+        template_model.load_weights("backend.h5", by_name=True)
+
+    if multi_gpu > 1:
+        train_model = multi_gpu_model(template_model, gpus=multi_gpu)
+    else:
+        train_model = template_model
+
+    optimizer = Adam(lr=lr, clipnorm=0.001)
+    train_model.compile(loss=dummy_loss, optimizer=optimizer)
+
+    return train_model, infer_model
 
 
 class Yolo3Adapter(AbstractModelAdapter):
@@ -32,6 +103,9 @@ class Yolo3Adapter(AbstractModelAdapter):
 
     def build_models(self) -> Tuple[Model, Model]:
 
+        if self.env.max_image_side_length is None:
+            self.env.max_image_side_length = 416
+
         checkpoint_dir_path, checkpoint_path = self.get_checkpoint_location()
         try:
             last = self.find_last()
@@ -52,7 +126,9 @@ class Yolo3Adapter(AbstractModelAdapter):
             obj_scale=5,
             noobj_scale=1,
             xywh_scale=1,
-            class_scale=1
+            class_scale=1,
+            use_transfer_learning=self.env.use_transfer_learning
+
         )  # make sure you know what you freeze
         return train_model, inference_model
 

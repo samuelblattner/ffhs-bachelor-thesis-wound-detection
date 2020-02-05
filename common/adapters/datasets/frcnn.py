@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 
 import cv2
 import numpy as np
@@ -6,25 +6,50 @@ from imgaug.augmenters import Augmenter
 from keras import backend as K
 
 from common.adapters.datasets.interfaces import AbstractDataset
+from common.utils.images import draw_box
 from neural_nets.frcnn.keras_frcnn.data_generators import calc_rpn, get_new_img_size
 from neural_nets.frcnn.keras_frcnn import resnet as nn, config
+from neural_nets.retina_net.keras_retinanet.preprocessing.generator import Generator
 
 
-class FRCNNDataset(AbstractDataset):
+class FRCNNDataset(AbstractDataset, Generator):
+
     BG_LAST = True
     cfg = config.Config()
 
-    def __init__(self, dataset_path: str, simplify_classes: bool = False, batch_size: int = 1, max_image_side_length: int = 512,
+    def __init__(self, dataset_path: str, simplify_classes: bool = False, batch_size: int = 1, max_image_side_length: int = 600,
                  augmentation: Augmenter = None, center_color_to_imagenet: bool = False, image_scale_mode: str = 'square', pre_image_scale=0.5):
 
         center_color_to_imagenet = True
 
+        # Default dimensions for F-RCNN
+        self.min_image_side_length = 600
+        self.max_image_side_length = None
+        self.image_scale_mode = 'square'
+
         super(FRCNNDataset, self).__init__(dataset_path, simplify_classes, batch_size, max_image_side_length, augmentation, center_color_to_imagenet,
                                            image_scale_mode, pre_image_scale)
 
+        self.batch_size = 1
+        self.group_method = 'ratio'
+        self.shuffle_groups = False
+
     # ==================== BaseDataset Methods =========================
+
+    @classmethod
+    def combine_x_y(cls, x_y_list: List[Tuple], num_items: int):
+
+        assert num_items == 1
+        return x_y_list[0][0]
+
     def compile_dataset(self):
-        pass
+
+        # Define groups
+        self.group_images()
+
+        # Shuffle when initializing
+        if self.shuffle_groups:
+            self.on_epoch_end()
 
     def register_image(self, group_name: str, image_id: int, path: str, width: int, height: int):
         pass
@@ -33,7 +58,6 @@ class FRCNNDataset(AbstractDataset):
         pass
 
     # ================== Generator Methods =============================
-
     def size(self):
         return len(self.get_image_info())
 
@@ -45,6 +69,9 @@ class FRCNNDataset(AbstractDataset):
             return self._labels.index(label) >= 0
         except ValueError:
             return False
+
+    def image_path(self, image_index):
+        pass
 
     def has_name(self, name):
         try:
@@ -86,29 +113,30 @@ class FRCNNDataset(AbstractDataset):
         }
 
     def get_x_y(self, indices: List[int]):
-        # self.cfg.rpn_stride = 4
-        batch_of_input_images, batch_of_mask_sets, batch_of_bbox_sets, batch_of_label_sets, num_labels = super(FRCNNDataset, self)._get_x_y(indices, False, False, False)
+        batch_of_input_images, batch_of_mask_sets, batch_of_bbox_sets, batch_of_label_sets, num_labels = super(FRCNNDataset, self)._get_x_y(
+            indices=indices,
+            autoscale=False,
+            use_masks=False,
+            do_preprocessing=False)
 
         x_img = batch_of_input_images[0]
         backend = K.image_dim_ordering()
         img_length_calc_function = nn.get_img_output_length
         bboxes = batch_of_bbox_sets[0]
 
-        height, width, ch = x_img.shape
-        ratio = height / width
-        if ratio <= 1:
-            min_size = self.cfg.im_size * ratio
-        else:
-            min_size = self.cfg.im_size / ratio
+        # height, width, ch = x_img.shape
+        # ratio = height / width
+        # if ratio <= 1:
+        #     min_size = self.cfg.im_size * ratio
+        # else:
+        #     min_size = self.cfg.im_size / ratio
 
         # get image dimensions for resizing
-        (resized_width, resized_height) = get_new_img_size(x_img.shape[1], x_img.shape[0], int(min_size))
-
-        # resize the image so that smalles side is length = 600px
+        (resized_width, resized_height) = get_new_img_size(x_img.shape[1], x_img.shape[0])
+        scale = resized_width / x_img.shape[1]
 
         width = x_img.shape[1]
         height = x_img.shape[0]
-
         image_data = {
             'bboxes': [{'x1': x1, 'x2': x2, 'y1': y1, 'y2': y2, 'class': self.label_to_name(c)} for (x1, y1, x2, y2), c in zip(bboxes, batch_of_label_sets[0])
                        if abs(x2 - x1) > 0 and abs(y2 - y1) > 0],
@@ -118,46 +146,45 @@ class FRCNNDataset(AbstractDataset):
 
         x_img = cv2.resize(x_img, (resized_width, resized_height), interpolation=cv2.INTER_CUBIC)
         y_rpn_cls, y_rpn_regr = calc_rpn(self.cfg, image_data, width, height, resized_width, resized_height, img_length_calc_function)
+        # Uncomment for Debug
+        # ===========================
+        # ===========================
 
-        # print(image_data.get('bboxes'))
-        # print(image_data)
         # draw = x_img.copy()
         # for box in image_data.get('bboxes'):
-        #     print('dab box')
-        #     print(int(box['y1']))
-        #     draw_box(draw, [int(box['y1'] * 0.196), int(box['x1'] * 0.196), int(box['y2'] * 0.196), int(box['x2'] * 0.196)], color=(255, 200, 0), th=2)
+        #     draw_box(draw, [int(box['y1'] * scale), int(box['x1'] * scale), int(box['y2'] * scale), int(box['x2'] * scale)], color=(255, 200, 0))
         #     caption = "{} {:.3f}".format(box['class'], 0)
-
-            # cv2.putText(
-            #     img=draw,
-            #     text=caption,
-            #     org=(int(box['x1']), int(box['y1']) - 10),
-            #     fontFace=cv2.FONT_HERSHEY_PLAIN,
-            #     fontScale=2,
-            #     color=(255, 200, 0),
-            #     thickness=3)
-
-        # for box in best:
-        #     print(box)
-        #     draw_box(draw, [int(box[2]), int(box[0]), int(box[3]), int(box[1])], color=(32, 128, 255), th=2)
-        #     caption = "{} {:.3f}".format(box['class'], 0)
-
-            # cv2.putText(
-            #     img=draw,
-            #     text=caption,
-            #     org=(int(box[0]), int(box[1]) - 10),
-            #     fontFace=cv2.FONT_HERSHEY_PLAIN,
-            #     fontScale=2,
-            #     color=(255, 200, 0),
-            #     thickness=3)
-        # draw[:, :, 0] += self.cfg.img_channel_mean[2]
-        # draw[:, :, 1] += self.cfg.img_channel_mean[1]
-        # draw[:, :, 2] += self.cfg.img_channel_mean[0]
+        #
+        #     cv2.putText(
+        #         img=draw,
+        #         text=caption,
+        #         org=(int(box['x1'] * scale), int(box['y1'] * scale) - 10),
+        #         fontFace=cv2.FONT_HERSHEY_PLAIN,
+        #         fontScale=2,
+        #         color=(255, 200, 0),
+        #         thickness=3)
+        #
+        # # for box in best:
+        # #     print(box)
+        # #     draw_box(draw, [int(box[2]), int(box[0]), int(box[3]), int(box[1])], color=(32, 128, 255), th=2)
+        # #     caption = "{} {:.3f}".format(box['class'], 0)
+        # #
+        # #     cv2.putText(
+        # #         img=draw,
+        # #         text=caption,
+        # #         org=(int(box[0]), int(box[1]) - 10),
+        # #         fontFace=cv2.FONT_HERSHEY_PLAIN,
+        # #         fontScale=2,
+        # #         color=(255, 200, 0),
+        # #         thickness=3)
+        # # draw[:, :, 0] += self.cfg.img_channel_mean[2]
+        # # draw[:, :, 1] += self.cfg.img_channel_mean[1]
+        # # draw[:, :, 2] += self.cfg.img_channel_mean[0]
         # from matplotlib import pyplot as plt
         # plt.imshow(draw.astype(np.uint8))
         # plt.show()
-
-        # print(y_rpn_cls[0][0])
+        # ================================
+        # ================================
 
         # Zero-center by mean pixel, and preprocess image
         x_img = x_img.astype(np.float32)
@@ -176,13 +203,13 @@ class FRCNNDataset(AbstractDataset):
             y_rpn_cls = np.transpose(y_rpn_cls, (0, 2, 3, 1))
             y_rpn_regr = np.transpose(y_rpn_regr, (0, 2, 3, 1))
 
-        # print(y_rpn_cls.shape)
-
         return np.copy(x_img), [np.copy(y_rpn_cls), np.copy(y_rpn_regr)], image_data
 
     def __getitem__(self, index):
         """
-        Keras sequence method for generating batches.
+        Keras sequence method for generating batches for F-RCNN.
+        F-RCNN only takes 1-batches.
         """
 
-        return self.get_x_y([index])
+        group = self.groups[index]
+        return self.get_x_y(group)

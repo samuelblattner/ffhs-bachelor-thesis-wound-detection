@@ -13,6 +13,8 @@ class UnionDataset(AbstractDataset, Generator):
     combines multiple datasets
     """
 
+    dataset_class = None
+
     def compile_dataset(self):
         self.group_method = 'random'
         self.shuffle_groups = False
@@ -25,6 +27,8 @@ class UnionDataset(AbstractDataset, Generator):
         self.compute_shapes = guess_shapes
         self.preprocess_image = preprocess_image
         self.config = None
+
+        self.batch_size = min([d.batch_size for d in self.datasets])
 
         # Define groups
         self.group_images()
@@ -51,26 +55,28 @@ class UnionDataset(AbstractDataset, Generator):
 
     datasets: List[Union[AbstractDataset, Generator]] = []
 
-    def __init__(self, datasets: List[Union[AbstractDataset, Generator]]):
+    def __init__(self, datasets: List[Union[AbstractDataset, Generator]], batch_size: int = 1):
         self.datasets = datasets
         super(UnionDataset, self).__init__(
             dataset_path='',
             simplify_classes=False
         )
+        self.batch_size = batch_size
+        self.dataset_class = self.datasets[0].__class__
         self.compile_dataset()
 
     def __len__(self):
-        return self.size()
+        return len(self.groups)
 
     def __get_dataset_for_idx(self, idx: int) -> Tuple[AbstractDataset, int]:
 
         sum_len = 0
         for dataset in self.datasets:
 
-            if idx < sum_len + len(dataset):
+            if idx < sum_len + dataset.size():
                 return dataset, idx - sum_len
 
-            sum_len += len(dataset)
+            sum_len += dataset.size()
 
     def size(self):
         return sum([d.size() for d in self.datasets])
@@ -113,7 +119,33 @@ class UnionDataset(AbstractDataset, Generator):
         """
         Keras sequence method for generating batches.
         """
-        # group = self.groups[index]
+
+        # 1. Get image indices
         group = self.groups[index]
-        dataset, local_idx = self.__get_dataset_for_idx(group[0])
-        return dataset.__getitem__(local_idx)
+
+        # 2. Create a dict to assign each index to its corresponding dataset
+        index_datasets = {}
+        for i, idx in enumerate(group):
+
+            dataset, local_idx = self.__get_dataset_for_idx(idx)
+            index_datasets[dataset.dataset_path] = {
+                'dataset': dataset,
+                'batch_indices': index_datasets.get(dataset.dataset_path, {}).get('batch_indices', []) + [i],
+                'glob_indices': index_datasets.get(dataset.dataset_path, {}).get('glob_indices', []) + [idx],
+                'local_indices': index_datasets.get(dataset.dataset_path, {}).get('local_indices', []) + [local_idx]
+            }
+
+        x_y = []
+
+        for dataset in self.datasets:
+            dataset.before_batch_no(self._batch_no)
+
+        for dataset, data in index_datasets.items():
+            x_y.append(
+                (data.get('dataset').get_x_y(data.get('local_indices')), data.get('batch_indices'))
+            )
+
+        self._cur_img_idx += len(group)
+
+        self._batch_no += 1
+        return self.dataset_class.combine_x_y(x_y, len(group))

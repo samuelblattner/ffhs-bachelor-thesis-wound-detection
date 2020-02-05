@@ -190,14 +190,14 @@ class AbstractModelAdapter:
 
         self.train_model.fit_generator(
             generator=train_dataset,
-            steps_per_epoch=np.ceil(len(train_dataset) / self.env.batch_size) * 3,
+            steps_per_epoch=np.ceil(len(train_dataset) / self.env.batch_size),
             epochs=self.env.epochs,
             initial_epoch=self.train_model.epoch,
             verbose=1,
             validation_data=val_dataset,
             validation_steps=np.ceil(len(val_dataset) / self.env.batch_size),
             max_queue_size=5,
-            workers=4,
+            workers=1,
             use_multiprocessing=False,
             shuffle=False,
             callbacks=self.get_callbacks(loss_patience, val_loss_patience)

@@ -48,10 +48,10 @@ class Environment:
     epochs: int = 1
 
     #: Max size of longer image side
-    max_image_side_length: int = 1333
+    max_image_side_length: int = None
 
     #: Min size of shorter image side
-    min_image_side_length: int = 800
+    min_image_side_length: int = None
 
     #: Whether to use transfer learning (i.e. pre-trained feature/backbone weights) or not
     use_transfer_learning: bool = False
@@ -149,7 +149,7 @@ class Environment:
                 env.name = config_dict.get('name', env.name)
                 env.description = config_dict.get('description', env.description)
                 env.batch_size = config_dict.get('batch_size', env.batch_size)
-                env.epochs = config_dict.get('epochs', env.epochs)
+                env.epochs = config_dict.get('max_epochs', config_dict.get('epochs', env.epochs))
                 env.max_image_side_length = config_dict.get('max_image_side_length', env.max_image_side_length)
                 env.min_image_side_length = config_dict.get('min_image_side_length', env.min_image_side_length)
                 env.use_transfer_learning = config_dict.get('use_transfer_learning', env.use_transfer_learning)
@@ -262,9 +262,9 @@ class Environment:
             val_datasets.append(val_dataset)
             test_datasets.append(test_dataset)
 
-        self.__train_dataset = UnionDataset(train_datasets)
-        self.__val_dataset = UnionDataset(val_datasets)
-        self.__test_dataset = UnionDataset(test_datasets)
+        self.__train_dataset = UnionDataset(train_datasets, batch_size=self.batch_size)
+        self.__val_dataset = UnionDataset(val_datasets, batch_size=self.batch_size)
+        self.__test_dataset = UnionDataset(test_datasets, batch_size=self.batch_size)
 
     def get_datasets(self) -> Tuple[AbstractDataset, AbstractDataset, AbstractDataset]:
         return self.__train_dataset, self.__val_dataset, self.__test_dataset
@@ -291,8 +291,8 @@ class Environment:
             raise ValueError('Please specify an epoch number of >= 1. Current value is: {}'.format(self.epochs))
 
         # Check image side length
-        if self.max_image_side_length <= 0:
-            raise ValueError('Please specify a max image side number of >= 1. Current value is: {}'.format(self.max_image_side_length))
+        # if self.max_image_side_length <= 0:
+        #     raise ValueError('Please specify a max image side number of >= 1. Current value is: {}'.format(self.max_image_side_length))
 
         # Check datasets
         if self.purpose == ModelPurposeEnum.TRAINING:

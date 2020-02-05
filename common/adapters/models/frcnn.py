@@ -45,8 +45,7 @@ class FRCNNAdapter(AbstractModelAdapter):
         self.cfg.use_horizontal_flips = False
         self.cfg.use_vertical_flips = False
         self.cfg.rot_90 = False
-        self.cfg.im_size = self.env.max_image_side_length
-        # self.cfg.base_net_weights = os.path.join('./model/', nn.get_weight_path())
+        self.cfg.im_size = self.env.min_image_side_length
         model_dir, model_path = self.get_checkpoint_location()
         self.cfg.model_path = model_path
 
@@ -94,7 +93,6 @@ class FRCNNAdapter(AbstractModelAdapter):
 
         try:
 
-            print('last chckpoint')
             try:
                 last_checkpoint = self.find_last()
             except:
@@ -144,8 +142,8 @@ class FRCNNAdapter(AbstractModelAdapter):
         steps_no_loss_improvement = 0
         steps_no_val_loss_improvement = 0
 
-        steps_per_epoch = np.ceil(len(train_dataset) / self.env.batch_size) * 3
-        val_steps_per_epoch = np.ceil(len(val_dataset) / self.env.batch_size)
+        steps_per_epoch = np.ceil(len(train_dataset))
+        val_steps_per_epoch = np.ceil(len(val_dataset))
 
         model_rpn, model_classifier, model_all = self.train_model
 
@@ -276,7 +274,6 @@ class FRCNNAdapter(AbstractModelAdapter):
 
                     P_rpn = model_rpn.predict_on_batch(X)
 
-
                     # Number of box propasels is set to 50 to reduce computation time
                     result = roi_helpers.rpn_to_roi(
                         rpn_layer=P_rpn[0],
@@ -296,8 +293,6 @@ class FRCNNAdapter(AbstractModelAdapter):
                     else:
                         min_size = self.cfg.im_size / ratio
                     self.cfg.im_size = min_size
-
-                    print(class_mapping)
 
                     X2, Y1, Y2, IouS = roi_helpers.calc_iou(result, img_data, self.cfg, class_mapping)
                     #====================

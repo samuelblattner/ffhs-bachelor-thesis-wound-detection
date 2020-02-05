@@ -65,7 +65,8 @@ class AbstractDataset:
     _annotations = {}
 
     #: Current image index for iterator
-    __cur_img_idx: int = 0
+    _cur_img_idx: int = 0
+    _batch_no: int = 0
 
     # Methods
     # =======
@@ -99,7 +100,7 @@ class AbstractDataset:
         self._images = {}
         self.__image_id_map = {}
         self.__image_info = []
-        self.__cur_img_idx: int = 0
+        self._cur_img_idx: int = 0
         self._labels = []
         self._label_names = []
 
@@ -110,8 +111,15 @@ class AbstractDataset:
         self.augmentation = augmentation
         self.center_color_to_imagenet = center_color_to_imagenet
         self.image_scale_mode = image_scale_mode
-
+        self.dataset_path = dataset_path
         self.__load_dataset(dataset_path)
+
+    @classmethod
+    def combine_x_y(cls, x_y: List[Tuple], num_items: int):
+        raise NotImplementedError()
+
+    def before_batch_no(cls, batch_no: int):
+        pass
 
     @classmethod
     def create_datasets(
@@ -402,11 +410,8 @@ class AbstractDataset:
                 self.__extract_mask_infos_from_annotations_file(content)
                 self.__extract_category_infos_from_annotations_file(content)
 
-    def __len__(self):
-        return len(self.__image_info)
-
     def __iter__(self):
-        self.__cur_img_idx = 0
+        self._cur_img_idx = 0
         return self
 
     def _get_x_y(self, indices: List[int], autoscale: bool = True, use_masks: bool = True, do_preprocessing: bool = False):
@@ -553,7 +558,7 @@ class AbstractDataset:
             batch_of_target_masks.append(masks)
             batch_of_target_labels.append(labels)
 
-            self.__cur_img_idx += 1
+            self._cur_img_idx += 1
 
         if use_masks:
             batch_of_target_bboxes = np.zeros((1, batch_of_target_masks[0].shape[2], 4))
@@ -583,10 +588,9 @@ class AbstractDataset:
 
         :return:
         """
-
-        idx = self.__cur_img_idx
-        if self.__cur_img_idx >= len(self):
-            idx = self.__cur_img_idx = 0
+        idx = self._cur_img_idx
+        if self._cur_img_idx >= len(self):
+            idx = self._cur_img_idx = 0
 
         return self[idx]
 
@@ -628,7 +632,6 @@ class AbstractDataset:
         """
         # Load image
         # image = skimage.io.imread(self.image_info[image_id]['path'])
-
         im = Image.open(self._images[image_id]['path'])
 
         sys.stdout.write('Loading image {}\n'.format(self._images[image_id]['path']))
@@ -740,8 +743,4 @@ class AbstractDataset:
 
     @abstractmethod
     def load_image(self, image_idx: int) -> Image:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def get_xy(self, indices: List[int]):
         raise NotImplementedError()

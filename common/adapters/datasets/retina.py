@@ -151,7 +151,9 @@ class RetinaDataset(AbstractDataset, Generator):
             indices=indices,
             autoscale=True,
             use_masks=False,
-            do_preprocessing=True)
+            do_preprocessing=True,
+            downscale=True
+        )
 
         # Extract boxes
         for batch, sets in enumerate(zip(batch_of_input_images, batch_of_bbox_sets, batch_of_label_sets)):

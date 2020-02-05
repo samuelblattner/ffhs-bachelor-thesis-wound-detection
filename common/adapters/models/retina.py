@@ -115,7 +115,7 @@ class BaseRetinaAdapter(AbstractModelAdapter):
                 #     images[0], max_dim=self.env.max_image_side_length, min_dim=self.env.min_image_side_length
                 # )
 
-                image, scale = resize_image(image, self.env.min_image_side_length, self.env.max_image_side_length)
+                image, scale = resize_image(image, self.env.min_image_side_length or 800, self.env.max_image_side_length or 1333)
 
                 print(image.shape, scale)
                 # from matplotlib import pyplot as plt

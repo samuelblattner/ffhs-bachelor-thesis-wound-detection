@@ -8,11 +8,12 @@
   "simplify_classes": true,
   "datasets": [
     {
-      "name": "puppet_measure_bands",
+      "name": "body_shots",
+      "pre_image_scale": 1.0,
       "split": [
-        0.67,
-        0.165,
-        0.165
+        0.0,
+        0.0,
+        1.0
       ]
     }
   ]

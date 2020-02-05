@@ -247,7 +247,7 @@ class Environment:
                 center_color_to_imagenet=self.center_color_to_imagenet,
                 simplify_classes=self.simplify_classes,
                 image_scale_mode=self.img_scale_mode,
-                pre_image_scale=dataset.get('pre_image_scale'),
+                pre_image_scale=dataset.get('pre_image_scale', 0.5),
                 split_by_filename_base=dataset.get('split_by_filename_base'),
                 max_examples_per_filename_base=dataset.get('max_examples_per_filename_base', 0),
                 k_fold_x_val=self.k_fold_x_val,

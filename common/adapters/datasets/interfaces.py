@@ -419,7 +419,7 @@ class AbstractDataset:
         self._cur_img_idx = 0
         return self
 
-    def _get_x_y(self, indices: List[int], autoscale: bool = True, use_masks: bool = True, do_preprocessing: bool = False):
+    def _get_x_y(self, indices: List[int], autoscale: bool = True, use_masks: bool = True, do_preprocessing: bool = False, downscale: bool = False):
 
         batch_of_input_images = []
         batch_of_target_masks = []
@@ -511,7 +511,7 @@ class AbstractDataset:
                         masks[:, 3] = np.multiply(masks[:, 3], s_h)
 
                 image, w, scale, p, c = resize_image(
-                    image, max_dim=self.max_image_side_length, min_dim=self.min_image_side_length
+                    image, max_dim=self.max_image_side_length, min_dim=self.min_image_side_length, downscale=downscale
                 )
 
                 # print(w, p, c, scale)

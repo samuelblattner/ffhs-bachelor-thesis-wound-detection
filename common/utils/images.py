@@ -43,7 +43,7 @@ def resize(image, output_shape, order=1, mode='constant', cval=0, clip=True,
             preserve_range=preserve_range)
 
 
-def resize_image(image, min_dim=None, max_dim=None, min_scale=None, mode="square"):
+def resize_image(image, min_dim=None, max_dim=None, min_scale=None, mode="square", downscale: bool = False):
     """Resizes an image keeping the aspect ratio unchanged.
 
     min_dim: if provided, resizes the image such that it's smaller
@@ -90,7 +90,7 @@ def resize_image(image, min_dim=None, max_dim=None, min_scale=None, mode="square
     # Scale?
     if min_dim:
         # Scale up but not down
-        scale = max(1, min_dim / min(h, w))
+        scale = max(0 if downscale else 1, min_dim / min(h, w))
     if min_scale and scale < min_scale:
         scale = min_scale
 
@@ -99,6 +99,8 @@ def resize_image(image, min_dim=None, max_dim=None, min_scale=None, mode="square
         image_max = max(h, w)
         if round(image_max * scale) > max_dim:
             scale = max_dim / image_max
+        elif downscale:
+            max_dim = int(image_max * scale)
 
     # Resize image using bilinear interpolation
     if scale != 1:

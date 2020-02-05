@@ -45,7 +45,7 @@ class FRCNNAdapter(AbstractModelAdapter):
         self.cfg.use_horizontal_flips = False
         self.cfg.use_vertical_flips = False
         self.cfg.rot_90 = False
-        self.cfg.im_size = self.env.min_image_side_length
+        self.cfg.im_size = self.env.min_image_side_length or 600
         model_dir, model_path = self.get_checkpoint_location()
         self.cfg.model_path = model_path
 

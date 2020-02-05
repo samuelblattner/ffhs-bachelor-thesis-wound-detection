@@ -118,6 +118,11 @@ class AbstractDataset:
     def combine_x_y(cls, x_y: List[Tuple], num_items: int):
         raise NotImplementedError()
 
+    def size(self):
+        """ Size of the dataset.
+        """
+        raise NotImplementedError('size method not implemented')
+
     def before_batch_no(cls, batch_no: int):
         pass
 
@@ -488,7 +493,7 @@ class AbstractDataset:
                 # ret_mask = ret_mask.astype(np.bool)
 
             # If max image side length was specified, resize image and masks
-            if self.max_image_side_length is not None and autoscale:
+            if (self.max_image_side_length is not None or self.min_image_side_length is not None) and autoscale:
                 old_height, old_width = image.shape[0], image.shape[1]
                 ratio = old_height / old_width
 

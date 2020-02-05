@@ -89,6 +89,7 @@ class ModelSuite:
         parser.add_argument('--eval_images', help='Stores and displays evaluation images if enabled', default=False, required=False, action='store_true')
         parser.add_argument('--full_size_eval', help='Full Size Eval', default=False, type=bool, required=False)
         parser.add_argument('--gpu_no', help='GPU no', default=0, type=int, required=False)
+        parser.add_argument('--batch_size', help='Batch Size', default=None, type=int, required=False)
 
         return parser.parse_args(sys.argv[1:])
 
@@ -106,6 +107,8 @@ class ModelSuite:
                 net_type=args.net_type,
                 available=', '.join(['"{}"'.format(key) for key in NET_MAP.keys()])
             ))
+        if args.batch_size is not None:
+            env.batch_size = int(args.batch_size)
         env.purpose = ModelPurposeEnum.TRAINING if args.purpose == 'train' else ModelPurposeEnum.PREDICTION if args.purpose == 'predict' else ModelPurposeEnum.EVALUATION
         env.neural_net_type = NET_MAP.get(args.net_type)
         env.dataset_class = DATASET_CLASS_MAP.get(env.neural_net_type)

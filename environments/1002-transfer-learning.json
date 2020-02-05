@@ -1,0 +1,19 @@
+{
+  "name": "1001 Default Nets",
+  "description": "Default Network Configurations",
+  "batch_size": 10,
+  "max_epochs": 1000,
+  "shuffle_dataset": true,
+  "shuffle_seed": 0,
+  "simplify_classes": true,
+  "datasets": [
+    {
+      "name": "puppet_measure_bands",
+      "split": [
+        0.67,
+        0.165,
+        0.165
+      ]
+    }
+  ]
+}

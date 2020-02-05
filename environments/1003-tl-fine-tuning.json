@@ -1,0 +1,21 @@
+{
+  "name": "1003 TL Fine Tuning",
+  "description": "Default Network Configurations using Transfer Learning, Fine Tuning",
+  "batch_size": 5,
+  "max_epochs": 1000,
+  "shuffle_dataset": true,
+  "shuffle_seed": 0,
+  "simplify_classes": true,
+  "use_transfer_learning": true,
+  "allow_base_layer_training": true,
+  "datasets": [
+    {
+      "name": "puppet_measure_bands",
+      "split": [
+        0.67,
+        0.165,
+        0.165
+      ]
+    }
+  ]
+}

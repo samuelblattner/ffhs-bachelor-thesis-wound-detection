@@ -118,6 +118,7 @@ class Environment:
     __num_classes: int = 13
 
     evaluation_dir: str = './evaluation'
+    eval_name_suffix: str = None
     pre_image_scale: float = 0.5
     split_by_filename_base: bool = False
     max_examples_per_filename_base: int = 0

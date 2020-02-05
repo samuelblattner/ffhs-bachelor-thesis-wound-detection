@@ -84,8 +84,10 @@ class ModelSuite:
                             required=False)
         parser.add_argument('--data_dir', help='Base directory for datasets. Default: ./data', default='./data', type=str, required=False)
         parser.add_argument('--eval_dir', help='Evaluation directory', default='./evaluation', type=str, required=False)
+        parser.add_argument('--eval_name_suffix', help='Evaluation file name suffix', default=None, type=str, required=False)
         parser.add_argument('--eval_heatmaps', help='Stores and displays evaluation heatmaps if enabled', default=False, required=False, action='store_true')
-        parser.add_argument('--eval_heatmaps_overview', help='Stores and displays evaluation heatmaps overview if enabled', default=False, required=False, action='store_true')
+        parser.add_argument('--eval_heatmaps_overview', help='Stores and displays evaluation heatmaps overview if enabled', default=False, required=False,
+                            action='store_true')
         parser.add_argument('--eval_images', help='Stores and displays evaluation images if enabled', default=False, required=False, action='store_true')
         parser.add_argument('--full_size_eval', help='Full Size Eval', default=False, type=bool, required=False)
         parser.add_argument('--gpu_no', help='GPU no', default=0, type=int, required=False)
@@ -116,6 +118,7 @@ class ModelSuite:
         env.data_root = args.data_dir
         env.img_scale_mode = 'just' if 'retina' in args.net_type else 'square'
         env.evaluation_dir = args.eval_dir
+        env.eval_name_suffix = args.eval_name_suffix
         env.gpu_no = args.gpu_no
         env.full_size_eval = args.full_size_eval
         env.eval_heatmaps = args.eval_heatmaps
@@ -200,7 +203,7 @@ class ModelSuite:
             fig, axs = plt.subplots(len(test_dataset.get_image_info()), 2, figsize=(10, 60))
 
         if self.env.eval_heatmaps:
-            fullsize_fig, fullsize_axs = plt.subplots(1, 1, figsize=(20,20))
+            fullsize_fig, fullsize_axs = plt.subplots(1, 1, figsize=(20, 20))
 
         for i, image_info in enumerate(test_dataset.get_image_info()):
             raw_image = test_dataset.load_image(i)
@@ -251,16 +254,17 @@ class ModelSuite:
 
             # if self.env.eval_heatmaps:
 
-                # axs[i, 0].imshow(raw_image.astype(np.uint8))
+            # axs[i, 0].imshow(raw_image.astype(np.uint8))
 
-                # plt.show()
-                # exit(0)
+            # plt.show()
+            # exit(0)
             if self.env.eval_images:
                 # plt.show()
                 os.makedirs(full_path, exist_ok=True)
-                with open('{}/eval-{}{}-{}.png'.format(
+                with open('{}/eval-{}{}{}-{}.png'.format(
                         full_path,
                         self.model.full_name,
+                        self.env.eval_name_suffix if self.env.eval_name_suffix else '',
                         '-fullsize' if self.env.full_size_eval else '',
                         i
                 ), 'wb') as f:
@@ -269,9 +273,10 @@ class ModelSuite:
             if self.env.eval_heatmaps:
                 # plt.show()
                 os.makedirs(full_path, exist_ok=True)
-                with open('{}/eval-{}{}-{}-heatmap.png'.format(
+                with open('{}/eval-{}{}{}-{}-heatmap.png'.format(
                         full_path,
                         self.model.full_name,
+                        self.env.eval_name_suffix if self.env.eval_name_suffix else '',
                         '-fullsize' if self.env.full_size_eval else '',
                         i
                 ), 'wb') as f:
@@ -281,7 +286,9 @@ class ModelSuite:
         if self.env.eval_heatmaps_overview:
             plt.show()
             os.makedirs(full_path, exist_ok=True)
-            with open('{}/eval-{}{}.pdf'.format(full_path, self.model.full_name, '-fullsize' if self.env.full_size_eval else ''), 'wb') as f:
+            with open('{}/eval-{}{}{}.pdf'.format(full_path, self.model.full_name,
+                                                  self.env.eval_name_suffix if self.env.eval_name_suffix else '',
+                                                  '-fullsize' if self.env.full_size_eval else ''), 'wb') as f:
                 fig.savefig(f, format='pdf')
                 # Image.fromarray(plt).save(f)
 
@@ -386,7 +393,9 @@ class ModelSuite:
 
         os.makedirs(full_path, exist_ok=True)
 
-        with open('{}/eval-{}{}.csv'.format(full_path, self.model.full_name, '-fullsize' if self.env.full_size_eval else ''), 'w', encoding='utf-8') as f:
+        with open('{}/eval-{}{}{}.csv'.format(full_path, self.model.full_name,
+                                              self.env.eval_name_suffix if self.env.eval_name_suffix else '',
+                                              '-fullsize' if self.env.full_size_eval else ''), 'w', encoding='utf-8') as f:
             f.write(csv)
 
         return out

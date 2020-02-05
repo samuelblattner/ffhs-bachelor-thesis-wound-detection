@@ -1,6 +1,6 @@
 {
   "name": "1001 Default Nets",
-  "description": "Default Network Configurations",
+  "description": "Default Network Configurations, Evaluation on All Cases Dataset",
   "batch_size": 10,
   "max_epochs": 1000,
   "shuffle_dataset": true,
@@ -8,13 +8,13 @@
   "simplify_classes": true,
   "datasets": [
     {
-      "name": "body_shots",
-      "pre_image_scale": 1.0,
+      "name": "cases",
       "split": [
         0.0,
         0.0,
         1.0
-      ]
+      ],
+      "split_by_filename_base": true
     }
   ]
 }

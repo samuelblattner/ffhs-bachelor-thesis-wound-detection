@@ -1,3 +1,4 @@
+from random import random, randint
 from typing import List, Tuple
 
 from imgaug.augmenters import Augmenter
@@ -191,12 +192,15 @@ class RetinaDataset(AbstractDataset, Generator):
             #             thickness=1)
             #
             # from matplotlib import pyplot as plt
-            # plt.figure()
+            # fig = plt.figure(figsize=(10,15))
+            # plt.axis('off')
             # try:
             #     plt.imshow(draw.astype(np.uint8))
             # except:
             #     pass
             # plt.show()
+            # with open('train_images/{}.png'.format(randint(0, 1000)), 'wb') as f:
+            #     fig.savefig(f, format='png')
             #
             # exit(0)
             # ==========================

@@ -7,6 +7,8 @@ import os
 
 from os.path import join
 
+from imgaug.parameters import Clip, Normal, Add, Absolute
+
 from common.adapters.datasets.interfaces import AbstractDataset
 from common.adapters.datasets.union import UnionDataset
 from common.enums import NeuralNetEnum, ModelPurposeEnum
@@ -20,7 +22,18 @@ AUGMENTATION_MAP = {
     'affine': imgaug.augmenters.Affine,
     'grayscale': imgaug.augmenters.Grayscale,
     'sequential': imgaug.augmenters.Sequential,
-    'crop': imgaug.augmenters.CropToFixedSize
+    'crop': imgaug.augmenters.CropToFixedSize,
+    'sometimes': imgaug.augmenters.Sometimes,
+    'DefocusBlur': imgaug.augmenters.imgcorruptlike.DefocusBlur,
+    'LogContrast': imgaug.augmenters.contrast.LogContrast,
+    'MultiplySaturation': imgaug.augmenters.color.MultiplySaturation,
+    'ChangeColorTemperature': imgaug.augmenters.color.ChangeColorTemperature,
+    'Cutout': imgaug.augmenters.arithmetic.Cutout,
+    'Clip': Clip,
+    'Normal': Normal,
+    'Add': Add,
+    'Absolute': Absolute
+
 }
 
 CLASS_NAMES = {
@@ -193,22 +206,35 @@ class Environment:
             elif type(val) == dict:
                 self.replace_tuples(val)
 
+    def replace_lists(self, params):
+        for key, val in params.items():
+            if type(val) == str and val[0] == '[' and val[-1] == ']':
+                from ast import literal_eval as make_list
+                params[key] = make_list(val)
+            elif type(val) == dict:
+                self.replace_lists(val)
+
     def inflate_augmentation(self, params: dict):
         if params is None:
             return None
+
         aug_class = AUGMENTATION_MAP.get(params.get('type'))
         if aug_class is None:
             return None
         sub_params = params.get('params', {})
+
         self.replace_tuples(sub_params)
+        self.replace_lists(sub_params)
         args = []
         for key, val in sub_params.items():
             if key == '_':
                 args.append(val)
                 continue
-            if isinstance(val, List):
+            if isinstance(val, List) and len(val) > 0 and isinstance(val[0], dict):
                 for i, item in enumerate(val):
                     sub_params[key][i] = self.inflate_augmentation(sub_params[key][i])
+            elif isinstance(val, dict) and list(val.keys())[0] == 'type':
+                sub_params[key] = self.inflate_augmentation(sub_params[key])
 
         if '_' in sub_params:
             del sub_params['_']

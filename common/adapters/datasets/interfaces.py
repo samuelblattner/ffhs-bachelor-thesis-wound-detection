@@ -476,14 +476,21 @@ class AbstractDataset:
                     w, h = image.shape[1], image.shape[0]
 
                     for b in det.augment_bounding_boxes(bbs).bounding_boxes:
-                        aug_boxes.append(
-                            [
-                                max(0, min(w, b.x1)),
-                                max(0, min(h, b.y1)),
-                                max(0, min(w, b.x2)),
-                                max(0, min(h, b.y2)),
-                            ]
-                        )
+                        x1 = max(0, min(w, b.x1))
+                        y1 = max(0, min(h, b.y1))
+                        x2 = max(0, min(w, b.x2))
+                        y2 = max(0, min(h, b.y2))
+
+                        # Discard boxes with either 0 widht or 0 height
+                        if x2 - x1 > 0 and y2 - y1 > 0:
+                            aug_boxes.append(
+                                [
+                                    max(0, min(w, b.x1)),
+                                    max(0, min(h, b.y1)),
+                                    max(0, min(w, b.x2)),
+                                    max(0, min(h, b.y2)),
+                                ]
+                            )
                     masks = np.array(aug_boxes)
 
                 # Verify that shapes didn't change

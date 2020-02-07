@@ -3,8 +3,13 @@ import pandas as pd
 from common.utils.tables import TABLES
 
 
-LATEX_PRE = r'\begin{table}[]\centering\resizebox{\textwidth}{!}{%'
+LATEX_PRE = '\\begin{table}\n\t\\centering\n\t\\resizebox{\\textwidth}{!}{'
 LATEX_POST = '}\label{{label}}\caption{{caption}) \%}\end{table}'
+
+LATEX_TABLE_PRE = '\\begin{table}\n\t\\centering\n\t\\resizebox{\\textwidth}{!}{\n'
+LATEX_TABLE_POST = '}\\end{table}'
+LATEX_PARBOX_PARBOX = '\t\\parbox{.5\\textwidth}{\n\t\t\\resizebox{0.5\\textwidth}{!}{%\n'
+LATEX_POST_PARBOX = '}%\n'
 
 OUTPUT = '../../Dokumentation/src/common/tables/tables.tex'
 
@@ -36,7 +41,14 @@ if __name__ == '__main__':
 
     with open(OUTPUT, 'w', encoding='utf-8') as f:
 
-        for table in TABLES:
+        for t, table in enumerate(TABLES):
+
+            if t % 2 == 0:
+                f.write(LATEX_TABLE_PRE)
+            else:
+                f.write('\\qquad')
+
+            f.write(LATEX_PARBOX_PARBOX)
 
             label = table.get('label', 'NO LABEL')
             caption = table.get('caption', 'NO CAPTION')
@@ -90,16 +102,10 @@ if __name__ == '__main__':
                     target_table.iloc[iou * group_size + group_size - 1, :] = target_table.iloc[iou * group_size: iou * group_size + group_size - 1, :].mean(axis=0)
 
             target_table[('', 'mAP')] = target_table.iloc[:, target_table.columns.get_level_values(1) == 'AP'].mean(axis=1)
-            latex = '{pre}\n{table}\n{post}'.format(
-                pre=LATEX_PRE,
+            latex = '{table}'.format(
                 table=target_table.to_latex(
                     formatters=[f2is, f2p, f2p, None, f2p, f2is, f2p, f2p, None, f2p, f2pb]
-                ),
-                post='{}{}{}'.format(
-                    '}',
-                    r'\label{{{label}}}\caption{{{caption}}}'.format(label=label, caption=caption),
-                    ' }\end{table}'
-                ))
+                ).replace('end{tabular}', 'end{tabular}%'))
 
             last_name = 'Avg' if calculate_group_average else table_names[-1]
             latex = re.sub(
@@ -111,3 +117,12 @@ if __name__ == '__main__':
             latex = re.sub(r'[lr]{4,}', r'l|l|lllll|lllll|l', latex)
 
             f.write(latex)
+            f.write(LATEX_POST_PARBOX)
+            f.write('\\label{{tab:{}}}\n\\caption{{{}}}\n'.format(label, caption))
+            f.write('}')
+
+            if t > 0 and ((t + 1) % 2 == 0 or (t + 1) >= len(TABLES)):
+                f.write(LATEX_TABLE_POST)
+
+            if t > 0 and (t + 1) % 12 == 0:
+                f.write('\clearpage')

@@ -1,13 +1,13 @@
 {
-  "name": "1011 Transfer Learning Image Augmentation",
-  "description": "Default Network Configurations using Transfer Learning and Image Augmentation",
+  "name": "1012 Transfer Learning Image Augmentation Fine Tuning",
+  "description": "Default Network Configurations using Transfer Learning and Image Augmentation, Fine Tuning Backbone",
   "batch_size": 5,
   "max_epochs": 1000,
   "shuffle_dataset": true,
   "shuffle_seed": 0,
   "simplify_classes": true,
   "use_transfer_learning": true,
-  "allow_base_layer_training": false,
+  "allow_base_layer_training": true,
   "datasets": [
     {
       "name": "puppet_measure_bands",

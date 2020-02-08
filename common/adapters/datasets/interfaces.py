@@ -28,7 +28,7 @@ class AbstractDataset:
     BG_LAST = False
 
     #: Factor to multiply size of input image by in order to reduce memory load
-    IMAGE_FACTOR = 0.5
+    IMAGE_FACTOR = 1.0
 
     #: Clusters to use when simplifying wound classes into two groups
     CLASS_CLUSTERS = {

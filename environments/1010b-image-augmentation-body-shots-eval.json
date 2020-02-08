@@ -1,0 +1,20 @@
+{
+  "name": "1010b Image Augmentation",
+  "description": "Default Network Configurations using medium Image Augmentation",
+  "batch_size": 5,
+  "max_epochs": 1000,
+  "shuffle_dataset": true,
+  "shuffle_seed": 0,
+  "simplify_classes": true,
+  "datasets": [
+    {
+      "name": "body_shots",
+      "pre_image_scale": 1.0,
+      "split": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    }
+  ]
+}

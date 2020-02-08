@@ -1,14 +1,14 @@
 {
   "name": "1010 Image Augmentation",
   "description": "Default Network Configurations using Image Augmentation",
-  "batch_size": 5,
+  "batch_size": 10,
   "max_epochs": 1000,
   "shuffle_dataset": true,
   "shuffle_seed": 0,
   "simplify_classes": true,
   "datasets": [
     {
-      "name": "puppet_measure_bands",
+      "name": "closeup_wounds",
       "split": [
         0.67,
         0.165,

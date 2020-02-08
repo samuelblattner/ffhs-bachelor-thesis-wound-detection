@@ -1,6 +1,6 @@
 {
-  "name": "1010 Image Augmentation",
-  "description": "Default Network Configurations using Image Augmentation",
+  "name": "1010b Image Augmentation",
+  "description": "Default Network Configurations using medium Image Augmentation",
   "batch_size": 5,
   "max_epochs": 1000,
   "shuffle_dataset": true,
@@ -21,13 +21,13 @@
             {
               "type": "fliplr",
               "params": {
-                "p": 0.5
+                "p": 0.2
               }
             },
             {
               "type": "flipud",
               "params": {
-                "p": 0.5
+                "p": 0.2
               }
             },
             {
@@ -43,7 +43,7 @@
                           "type": "Normal",
                           "params": {
                             "loc": 1.0,
-                            "scale": 4.0
+                            "scale": 3.0
                           }
                         }
                       }
@@ -52,16 +52,16 @@
                   }
                 },
                 "translate_percent": {
-                  "x": "(-0.5, 0.5)",
-                  "y": "(-0.5, 0.5)"
+                  "x": "(-0.4, 0.4)",
+                  "y": "(-0.4, 0.4)"
                 },
-                "rotate": "[0.0, 90.0, 180.0, 270.0]"
+                "rotate": "[0.0, 90.0, 270.0]"
               }
             },
             {
               "type": "sometimes",
               "params": {
-                "p": 0.2
+                "p": 0.1
               },
               "children": [
                 {
@@ -75,26 +75,26 @@
             {
               "type": "LogContrast",
               "params": {
-                "gain": "(0.7, 1.3)"
+                "gain": "(0.8, 1.2)"
               }
             },
             {
               "type": "MultiplySaturation",
               "params": {
-                "mul": "(0.7, 1.3)"
+                "mul": "(0.8, 1.2)"
               }
             },
             {
               "type": "ChangeColorTemperature",
               "params": {
-                "kelvin": "(4000, 9000)"
+                "kelvin": "(5000, 8000)"
               }
             },
             {
               "type": "Cutout",
               "params": {
                 "size": "(0.01, 0.05)",
-                "nb_iterations": "(2, 20)",
+                "nb_iterations": "(2, 15)",
                 "fill_mode": "gaussian"
               }
             }

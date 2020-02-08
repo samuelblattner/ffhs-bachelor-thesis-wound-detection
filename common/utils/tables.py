@@ -144,6 +144,66 @@ TABLES = (
     #     )
     # },
 
+    # =========================
+    # 1010 – Image Augmentation
+    # =========================
+    {
+        'label': '1010',
+        'caption': 'Training on Puppet Dataset, Image Augmentation (no Transfer Learning), test on Puppet Dataset (env: 1010)',
+        'tables': (
+            ('RetinaNet 50', 'evaluation/final/eval-1010_Image_Augmentation--RetinaNet-Resnet50.csv'),
+            ('RetinaNet 152', 'evaluation/final/eval-1010_Image_Augmentation--RetinaNet-Resnet152.csv'),
+        )
+    },
+    {
+        'label': '1010-body-shots',
+        'caption': 'Training on Puppet Dataset, Image Augmentation (no Transfer Learning), test on Full Body Shots Dataset (env: 1010)',
+        'tables': (
+            ('RetinaNet 50', 'evaluation/final/eval-1010_Image_Augmentation--RetinaNet-Resnet50-body-shots-eval.csv'),
+            ('RetinaNet 152', 'evaluation/final/eval-1010_Image_Augmentation--RetinaNet-Resnet152-body-shots-eval.csv'),
+        )
+    },
+
+    # TODO: evaluate yolo3 and frcnn
+    # {
+    #     'label': '1010-all-cases',
+    #     'caption': 'Training on Puppet Dataset, fine-tuning backbone from Transfer Learning (no image augmentation), test on All Cases Dataset (env: 1003)',
+    #     'tables': (
+    # ('RetinaNet 50', 'evaluation/final/eval-1010_Image_Augmentation--RetinaNet-Resnet50-all-cases-eval.csv'),
+    # ('RetinaNet 152', 'evaluation/final/eval-1010_Image_Augmentation--RetinaNet-Resnet152-all-cases-eval.csv'),
+    #     )
+    # },
+
+    # ============================================
+    # 1011 – Image Augmentation, Transfer Learning
+    # ============================================
+    {
+        'label': '1011',
+        'caption': 'Training on Puppet Dataset, Image Augmentation with Transfer Learning (frozen Backbone), test on Puppet Dataset (env: 1010)',
+        'tables': (
+            ('RetinaNet 50', 'evaluation/final/eval-1011_Transfer_Learning_Image_Augmentation--RetinaNet-Resnet50.csv'),
+            ('RetinaNet 152', 'evaluation/final/eval-1011_Transfer_Learning_Image_Augmentation--RetinaNet-Resnet152.csv'),
+        )
+    },
+    {
+        'label': '1011-body-shots',
+        'caption': 'Training on Puppet Dataset, Image Augmentation with Transfer Learning (frozen Backbone), test on Full Body Shots Dataset (env: 1010)',
+        'tables': (
+            ('RetinaNet 50', 'evaluation/final/eval-1011_Transfer_Learning_Image_Augmentation--RetinaNet-Resnet50-body-shots-eval.csv'),
+            ('RetinaNet 152', 'evaluation/final/eval-1011_Transfer_Learning_Image_Augmentation--RetinaNet-Resnet152-body-shots-eval.csv'),
+        )
+    },
+
+    # TODO: evaluate yolo3 and frcnn
+    # {
+    #     'label': '1010-all-cases',
+    #     'caption': 'Training on Puppet Dataset, fine-tuning backbone from Transfer Learning (no image augmentation), test on All Cases Dataset (env: 1003)',
+    #     'tables': (
+    # ('RetinaNet 50', 'evaluation/final/eval-1010_Image_Augmentation--RetinaNet-Resnet50-all-cases-eval.csv'),
+    # ('RetinaNet 152', 'evaluation/final/eval-1010_Image_Augmentation--RetinaNet-Resnet152-all-cases-eval.csv'),
+    #     )
+    # },
+
     {
         'label': '0004-image-augmentation-scale-1x-6x, puppet',
         'caption': '0004: Configuration 0004: Image Augmentation Scale 1x to 6x, Puppet Dataset',

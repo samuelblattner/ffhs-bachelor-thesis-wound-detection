@@ -1,5 +1,5 @@
 {
-  "name": "1012 Transfer Learning Image Augmentation Fine Tuning",
+  "name": "1012c Transfer Learning Image Augmentation Fine Tuning",
   "description": "Default Network Configurations using Transfer Learning and low Image Augmentation, Fine Tuning Backbone",
   "batch_size": 5,
   "max_epochs": 1000,

@@ -169,7 +169,6 @@ class RetinaDataset(AbstractDataset, Generator):
         # Extract boxes
         for batch, sets in enumerate(zip(batch_of_input_images, batch_of_bbox_sets, batch_of_label_sets)):
             image, box_set, label_set = sets
-            print(image.shape)
             annotations.append({
                 'bboxes': box_set,
                 'labels': label_set

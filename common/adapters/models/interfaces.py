@@ -193,7 +193,9 @@ class AbstractModelAdapter:
         for i, datasets in enumerate(self.env.iter_datasets()):
 
             if self.env.auto_xval:
-                self.env.name = re.sub(r'^(\d{4})', r'\1{}'.format('abcdefghijklmnopqrstuvwxyz'[i]), base_env_name)
+
+                if self.env.x_val_auto_env_name:
+                    self.env.name = re.sub(r'^(\d{4})', r'\1{}'.format('abcdefghijklmnopqrstuvwxyz'[i]), base_env_name)
                 sys.stdout.write('--> X-Val: Training model {} of {} ({}):'.format(i, self.env.k_fold_x_val, self.env.name))
 
             self.train_model, self.inference_model = self.build_models()
@@ -212,8 +214,8 @@ class AbstractModelAdapter:
                 verbose=1,
                 validation_data=val_dataset,
                 validation_steps=np.ceil(val_dataset.size() / self.env.batch_size),
-                max_queue_size=5,
-                workers=4,
+                max_queue_size=4,
+                workers=2,
                 use_multiprocessing=False,
                 shuffle=False,
                 callbacks=self.get_callbacks(loss_patience, val_loss_patience)

@@ -1,6 +1,6 @@
 {
-  "name": "1002 Transfer Learning",
-  "description": "Default Network Configurations using Transfer Learning",
+  "name": "1011b Transfer Learning Image Augmentation",
+  "description": "Default Network Configurations using Transfer Learning and medium Image Augmentation",
   "batch_size": 5,
   "max_epochs": 1000,
   "shuffle_dataset": true,

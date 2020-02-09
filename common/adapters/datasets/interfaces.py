@@ -131,7 +131,8 @@ class AbstractDataset:
             cls,
             train_dataset_path: str, val_dataset_path: str = None, test_dataset_path: str = None,
             dataset_split: Tuple = None, shuffle: bool = False, shuffle_seed: int = None, split_by_filename_base: bool = False,
-            max_examples_per_filename_base=0, k_fold_x_val: int = 1, x_val_k: int = 0, x_val_ignore_dataset: bool = False, **kwargs):
+            max_examples_per_filename_base=0, k_fold_x_val: int = 1, x_val_k: int = 0, x_val_ignore_dataset: bool = False,
+            x_val_auto_env_name: bool = True, **kwargs):
         """
         Factory method to create training-, validation- and test data from an external dataset.
         If no path is indicated for validation and test dataset, and a dataset_split tuple is
@@ -438,7 +439,6 @@ class AbstractDataset:
             initial_width = image.shape[1]
             initial_height = image.shape[0]
 
-            print('Image ', r, initial_shape)
             has_crop = False
 
             # Apply augmentations if specified

@@ -1,20 +1,20 @@
 {
-  "name": "1100 Cases",
-  "description": "Training on Cases Dataset using Transfer Learning (frozen Backbone) and Image Augmentation",
+  "name": "1113 Cases Multishot 6 Fine Tuning",
+  "description": "Training on Cases Dataset using Transfer Learning (fine-tuning Backbone) and Image Augmentation, using 6 perspectives for every wound",
   "batch_size": 5,
   "max_epochs": 1000,
   "shuffle_dataset": true,
   "shuffle_seed": 0,
   "simplify_classes": true,
   "use_transfer_learning": true,
-  "allow_base_layer_training": false,
+  "allow_base_layer_training": true,
   "k_fold_x_val": 4,
   "x_val_k": "auto",
   "datasets": [
     {
       "name": "cases-multishots",
       "split_by_filename_base": true,
-      "max_examples_per_filename_base": 1,
+      "max_examples_per_filename_base": 6,
       "split": [
         0.67,
         0.165,

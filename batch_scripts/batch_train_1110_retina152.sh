@@ -1,0 +1,24 @@
+#!/bin/bash
+
+python main.py --purpose train    --env 1110-cases-multishot-3                                    --gpu_no 2 --batch_size=2 --net_type retina-resnet152 --data_dir=/home/blsa/projects/confidential/wound-detection/data/ --checkpoint_dir=/home/blsa/projects/confidential/wound-detection/checkpoints/ --eval_dir=/home/blsa/projects/confidential/wound-detection/evaluation/
+python main.py --purpose evaluate --env 1110-cases-multishot-3                                    --gpu_no 2 --net_type retina-resnet152 --data_dir=/home/blsa/projects/confidential/wound-detection/data/ --checkpoint_dir=/home/blsa/projects/confidential/wound-detection/checkpoints/ --eval_dir=/home/blsa/projects/confidential/wound-detection/evaluation/
+python main.py --purpose evaluate --env 1110-cases-multishot-3-body-shots-eval                    --gpu_no 2 --net_type retina-resnet152 --data_dir=/home/blsa/projects/confidential/wound-detection/data/ --checkpoint_dir=/home/blsa/projects/confidential/wound-detection/checkpoints/ --eval_dir=/home/blsa/projects/confidential/wound-detection/evaluation/
+
+mkdir -p /home/blsa/projects/confidential/wound-detection/checkpoints/1111a_Cases_Multishot_3_Fine_Tuning--RetinaNet-Resnet152
+mkdir -p /home/blsa/projects/confidential/wound-detection/checkpoints/1111b_Cases_Multishot_3_Fine_Tuning--RetinaNet-Resnet152
+mkdir -p /home/blsa/projects/confidential/wound-detection/checkpoints/1111c_Cases_Multishot_3_Fine_Tuning--RetinaNet-Resnet152
+mkdir -p /home/blsa/projects/confidential/wound-detection/checkpoints/1111d_Cases_Multishot_3_Fine_Tuning--RetinaNet-Resnet152
+
+cp /home/blsa/projects/confidential/wound-detection/checkpoints/1110a_Cases--RetinaNet-Resnet152/*latest.h5 /home/blsa/projects/confidential/wound-detection/checkpoints/1111a_Cases_Multishot_3_Fine_Tuning--RetinaNet-Resnet152
+cp /home/blsa/projects/confidential/wound-detection/checkpoints/1110b_Cases--RetinaNet-Resnet152/*latest.h5 /home/blsa/projects/confidential/wound-detection/checkpoints/1111b_Cases_Multishot_3_Fine_Tuning--RetinaNet-Resnet152
+cp /home/blsa/projects/confidential/wound-detection/checkpoints/1110c_Cases--RetinaNet-Resnet152/*latest.h5 /home/blsa/projects/confidential/wound-detection/checkpoints/1111c_Cases_Multishot_3_Fine_Tuning--RetinaNet-Resnet152
+cp /home/blsa/projects/confidential/wound-detection/checkpoints/1110d_Cases--RetinaNet-Resnet152/*latest.h5 /home/blsa/projects/confidential/wound-detection/checkpoints/1111d_Cases_Multishot_3_Fine_Tuning--RetinaNet-Resnet152
+
+mv /home/blsa/projects/confidential/wound-detection/checkpoints/1111a_Cases_Multishot_3_Fine_Tuning--RetinaNet-Resnet152/*latest.h5 /home/blsa/projects/confidential/wound-detection/checkpoints/1111a_Cases_Multishot_3_Fine_Tuning--RetinaNet-Resnet152/1111a_Cases_Multishot_3_Fine_Tuning--RetinaNet-Resnet152_0001.h5
+mv /home/blsa/projects/confidential/wound-detection/checkpoints/1111b_Cases_Multishot_3_Fine_Tuning--RetinaNet-Resnet152/*latest.h5 /home/blsa/projects/confidential/wound-detection/checkpoints/1111b_Cases_Multishot_3_Fine_Tuning--RetinaNet-Resnet152/1111b_Cases_Multishot_3_Fine_Tuning--RetinaNet-Resnet152_0001.h5
+mv /home/blsa/projects/confidential/wound-detection/checkpoints/1111c_Cases_Multishot_3_Fine_Tuning--RetinaNet-Resnet152/*latest.h5 /home/blsa/projects/confidential/wound-detection/checkpoints/1111c_Cases_Multishot_3_Fine_Tuning--RetinaNet-Resnet152/1111c_Cases_Multishot_3_Fine_Tuning--RetinaNet-Resnet152_0001.h5
+mv /home/blsa/projects/confidential/wound-detection/checkpoints/1111d_Cases_Multishot_3_Fine_Tuning--RetinaNet-Resnet152/*latest.h5 /home/blsa/projects/confidential/wound-detection/checkpoints/1111d_Cases_Multishot_3_Fine_Tuning--RetinaNet-Resnet152/1111d_Cases_Multishot_3_Fine_Tuning--RetinaNet-Resnet152_0001.h5
+
+python main.py --purpose train    --env 1111-cases-multishot-3-fine-tuning                        --gpu_no 2 --batch_size=2 --net_type retina-resnet152 --data_dir=/home/blsa/projects/confidential/wound-detection/data/ --checkpoint_dir=/home/blsa/projects/confidential/wound-detection/checkpoints/ --eval_dir=/home/blsa/projects/confidential/wound-detection/evaluation/
+python main.py --purpose evaluate --env 1111-cases-multishot-3-fine-tuning                        --gpu_no 2 --net_type retina-resnet152 --data_dir=/home/blsa/projects/confidential/wound-detection/data/ --checkpoint_dir=/home/blsa/projects/confidential/wound-detection/checkpoints/ --eval_dir=/home/blsa/projects/confidential/wound-detection/evaluation/
+python main.py --purpose evaluate --env 1111-cases-multishot-3-fine-tuning-body-shots-eval        --gpu_no 2 --net_type retina-resnet152 --data_dir=/home/blsa/projects/confidential/wound-detection/data/ --checkpoint_dir=/home/blsa/projects/confidential/wound-detection/checkpoints/ --eval_dir=/home/blsa/projects/confidential/wound-detection/evaluation/

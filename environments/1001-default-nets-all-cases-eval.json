@@ -1,20 +1,24 @@
 {
   "name": "1001 Default Nets",
-  "description": "Default Network Configurations, Evaluation on All Cases Dataset",
-  "batch_size": 10,
+  "description": "Default Network Configurations, Evaluation on Cases Dataset",
+  "batch_size": 5,
   "max_epochs": 1000,
   "shuffle_dataset": true,
   "shuffle_seed": 0,
   "simplify_classes": true,
+  "k_fold_x_val": 4,
+  "x_val_k": "auto",
+  "x_val_auto_env_name": false,
   "datasets": [
     {
-      "name": "cases",
+      "name": "cases-multishots",
+      "split_by_filename_base": true,
+      "max_examples_per_filename_base": 1,
       "split": [
-        0.0,
-        0.0,
-        1.0
-      ],
-      "split_by_filename_base": true
+        0.67,
+        0.165,
+        0.165
+      ]
     }
   ]
 }

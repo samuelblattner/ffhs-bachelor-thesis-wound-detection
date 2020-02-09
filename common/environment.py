@@ -147,6 +147,7 @@ class Environment:
     k_fold_x_val: int = 1
     x_val_k: int = 0
     x_val_ignore_dataset: bool = False
+    x_val_auto_env_name: bool = True
     auto_xval: bool = False
 
     @classmethod
@@ -196,6 +197,7 @@ class Environment:
                 x_val_k = config_dict.get('x_val_k', env.x_val_k)
                 env.auto_xval = x_val_k == 'auto'
                 env.x_val_ignore_dataset = config_dict.get('x_val_ignore_dataset', env.x_val_ignore_dataset)
+                env.x_val_auto_env_name = config_dict.get('x_val_auto_env_name', env.x_val_auto_env_name)
                 env.x_val_k = -1 if env.auto_xval else x_val_k
 
                 return env
@@ -294,7 +296,8 @@ class Environment:
                     max_examples_per_filename_base=dataset.get('max_examples_per_filename_base', 0),
                     k_fold_x_val=self.k_fold_x_val,
                     x_val_k=self.x_val_k if not self.auto_xval else i,
-                    x_val_ignore_dataset=self.x_val_ignore_dataset
+                    x_val_ignore_dataset=self.x_val_ignore_dataset,
+                    x_val_auto_env_name=self.x_val_auto_env_name
                 )
 
                 train_dataset.IMAGE_FACTOR = val_dataset.IMAGE_FACTOR = test_dataset.IMAGE_FACTOR = dataset.get('pre_image_scale', 1.0)

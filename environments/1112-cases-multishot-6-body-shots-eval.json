@@ -1,0 +1,25 @@
+{
+  "name": "1112 Cases Multishot 6",
+  "description": "Training on Cases Dataset using Transfer Learning (frozen Backbone) and Image Augmentation, using 6 perspectives for every wound",
+  "batch_size": 5,
+  "max_epochs": 1000,
+  "shuffle_dataset": true,
+  "shuffle_seed": 0,
+  "simplify_classes": true,
+  "use_transfer_learning": true,
+  "allow_base_layer_training": false,
+  "k_fold_x_val": 4,
+  "x_val_k": "auto",
+  "x_val_ignore_dataset": true,
+  "datasets": [
+    {
+      "name": "body_shots",
+      "pre_image_scale": 1.0,
+      "split": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    }
+  ]
+}

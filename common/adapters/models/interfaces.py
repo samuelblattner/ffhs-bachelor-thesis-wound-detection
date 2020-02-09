@@ -216,6 +216,9 @@ class AbstractModelAdapter:
                 callbacks=self.get_callbacks(loss_patience, val_loss_patience)
             )
 
+            self.train_model, self.inference_model = self.build_models()
+            self.load_latest_checkpoint()
+
     @abstractmethod
     def predict(self, images, min_score=0.5) -> List[List[Detection]]:
         raise NotImplementedError()

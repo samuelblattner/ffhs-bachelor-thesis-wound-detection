@@ -196,6 +196,9 @@ class AbstractModelAdapter:
                 self.env.name = re.sub(r'^(\d{4})', r'\1{}'.format('abcdefghijklmnopqrstuvwxyz'[i]), base_env_name)
                 sys.stdout.write('--> X-Val: Training model {} of {} ({}):'.format(i, self.env.k_fold_x_val, self.env.name))
 
+            self.train_model, self.inference_model = self.build_models()
+            self.load_latest_checkpoint()
+
             train_dataset, val_dataset, test_dataset = datasets
 
             assert val_dataset.augmentation is None
@@ -215,9 +218,6 @@ class AbstractModelAdapter:
                 shuffle=False,
                 callbacks=self.get_callbacks(loss_patience, val_loss_patience)
             )
-
-            self.train_model, self.inference_model = self.build_models()
-            self.load_latest_checkpoint()
 
     @abstractmethod
     def predict(self, images, min_score=0.5) -> List[List[Detection]]:

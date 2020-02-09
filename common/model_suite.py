@@ -195,6 +195,8 @@ class ModelSuite:
             if self.env.auto_xval and self.env.x_val_auto_env_name:
                 self.env.name = re.sub(r'^(\d{4})', r'\1{}'.format('abcdefghijklmnopqrstuvwxyz'[i]), base_name)
 
+            self.model = self._create_adapter()
+
             all_detections = [[[] for i in range(test_dataset.num_classes())] for j in range(test_dataset.size())]
             all_annotations = [[[] for i in range(test_dataset.num_classes())] for j in range(test_dataset.size())]
             average_precisions = {}

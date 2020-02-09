@@ -1,6 +1,7 @@
 from random import random, randint
 from typing import List, Tuple
 
+import keras
 from imgaug.augmenters import Augmenter
 import cv2
 import numpy as np
@@ -51,7 +52,26 @@ class RetinaDataset(AbstractDataset, Generator):
                 all_regressions[idx] = regressions
                 all_labels[idx] = labels
 
-        return np.array(images, dtype='float32'), [all_regressions, all_labels]
+        return cls._compute_inputs(images, num_items), [all_regressions, all_labels]
+
+    @classmethod
+    def _compute_inputs(cls, image_group, num_items):
+        """ Compute inputs for the network using an image_group.
+        """
+        # get the max image shape
+        max_shape = tuple(max(image.shape[x] for image in image_group) for x in range(3))
+
+        # construct an image batch object
+        image_batch = np.zeros((num_items,) + max_shape, dtype=keras.backend.floatx())
+
+        # copy all images to the upper left part of the image batch object
+        for image_index, image in enumerate(image_group):
+            image_batch[image_index, :image.shape[0], :image.shape[1], :image.shape[2]] = image
+
+        if keras.backend.image_data_format() == 'channels_first':
+            image_batch = image_batch.transpose((0, 3, 1, 2))
+
+        return image_batch
 
     def compile_dataset(self):
         self.group_method = 'ratio'
@@ -176,7 +196,6 @@ class RetinaDataset(AbstractDataset, Generator):
             # for ann in annotations:
             #
             #     for box in ann.get('bboxes'):
-            #         print(box)
             #         draw_box(draw, [int(box[1]), int(box[0]), int(box[3]), int(box[2])], color=(255, 200, 0))
             #         caption = "{} {:.3f}".format('hur', 0)
             #
@@ -208,7 +227,7 @@ class RetinaDataset(AbstractDataset, Generator):
 
         # Compute regression targets
         targets = self.compute_targets(batch_of_input_images, annotations)
-        batch_of_input_images = np.asarray(batch_of_input_images, dtype=np.float32)
+        batch_of_input_images = self.compute_inputs(batch_of_input_images)
         return batch_of_input_images, list(targets)
 
     def __getitem__(self, index):

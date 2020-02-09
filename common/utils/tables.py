@@ -174,12 +174,70 @@ TABLES = (
     #     )
     # },
 
+    # =================================
+    # 1010b – Medium Image Augmentation
+    # =================================
+    {
+        'label': '1010b',
+        'caption': 'Training on Puppet Dataset, Medium Image Augmentation (no Transfer Learning), test on Puppet Dataset (env: 1010b)',
+        'tables': (
+            ('RetinaNet 50', 'evaluation/final/eval-1010b_Image_Augmentation--RetinaNet-Resnet50.csv'),
+            ('RetinaNet 152', 'evaluation/final/eval-1010b_Image_Augmentation--RetinaNet-Resnet152.csv'),
+        )
+    },
+    {
+        'label': '1010b-body-shots',
+        'caption': 'Training on Puppet Dataset, Medium Image Augmentation (no Transfer Learning), test on Full Body Shots Dataset (env: 1010b)',
+        'tables': (
+            ('RetinaNet 50', 'evaluation/final/eval-1010b_Image_Augmentation--RetinaNet-Resnet50-body-shots-eval.csv'),
+            ('RetinaNet 152', 'evaluation/final/eval-1010b_Image_Augmentation--RetinaNet-Resnet152-body-shots-eval.csv'),
+        )
+    },
+
+    # {
+    #     'label': '1010b-all-cases',
+    #     'caption': 'Training on Puppet Dataset, fine-tuning backbone from Transfer Learning (no image augmentation), test on All Cases Dataset (env: 1003)',
+    #     'tables': (
+    # ('RetinaNet 50', 'evaluation/final/eval-1010_Image_Augmentation--RetinaNet-Resnet50-all-cases-eval.csv'),
+    # ('RetinaNet 152', 'evaluation/final/eval-1010_Image_Augmentation--RetinaNet-Resnet152-all-cases-eval.csv'),
+    #     )
+    # },
+
+    # ==============================
+    # 1010c – Low Image Augmentation
+    # ==============================
+    {
+        'label': '1010c',
+        'caption': 'Training on Puppet Dataset, Low Image Augmentation (no Transfer Learning), test on Puppet Dataset (env: 1010c)',
+        'tables': (
+            ('RetinaNet 50', 'evaluation/final/eval-1010c_Image_Augmentation--RetinaNet-Resnet50.csv'),
+            ('RetinaNet 152', 'evaluation/final/eval-1010c_Image_Augmentation--RetinaNet-Resnet152.csv'),
+        )
+    },
+    {
+        'label': '1010c-body-shots',
+        'caption': 'Training on Puppet Dataset, Low Image Augmentation (no Transfer Learning), test on Full Body Shots Dataset (env: 1010c)',
+        'tables': (
+            ('RetinaNet 50', 'evaluation/final/eval-1010c_Image_Augmentation--RetinaNet-Resnet50-body-shots-eval.csv'),
+            ('RetinaNet 152', 'evaluation/final/eval-1010c_Image_Augmentation--RetinaNet-Resnet152-body-shots-eval.csv'),
+        )
+    },
+
+    # {
+    #     'label': '1010b-all-cases',
+    #     'caption': 'Training on Puppet Dataset, fine-tuning backbone from Transfer Learning (no image augmentation), test on All Cases Dataset (env: 1003)',
+    #     'tables': (
+    # ('RetinaNet 50', 'evaluation/final/eval-1010_Image_Augmentation--RetinaNet-Resnet50-all-cases-eval.csv'),
+    # ('RetinaNet 152', 'evaluation/final/eval-1010_Image_Augmentation--RetinaNet-Resnet152-all-cases-eval.csv'),
+    #     )
+    # },
+
     # ============================================
     # 1011 – Image Augmentation, Transfer Learning
     # ============================================
     {
         'label': '1011',
-        'caption': 'Training on Puppet Dataset, Image Augmentation with Transfer Learning (frozen Backbone), test on Puppet Dataset (env: 1010)',
+        'caption': 'Training on Puppet Dataset, Image Augmentation with Transfer Learning (frozen Backbone), test on Puppet Dataset (env: 1011)',
         'tables': (
             ('RetinaNet 50', 'evaluation/final/eval-1011_Transfer_Learning_Image_Augmentation--RetinaNet-Resnet50.csv'),
             ('RetinaNet 152', 'evaluation/final/eval-1011_Transfer_Learning_Image_Augmentation--RetinaNet-Resnet152.csv'),
@@ -187,16 +245,160 @@ TABLES = (
     },
     {
         'label': '1011-body-shots',
-        'caption': 'Training on Puppet Dataset, Image Augmentation with Transfer Learning (frozen Backbone), test on Full Body Shots Dataset (env: 1010)',
+        'caption': 'Training on Puppet Dataset, Image Augmentation with Transfer Learning (frozen Backbone), test on Full Body Shots Dataset (env: 1011)',
         'tables': (
             ('RetinaNet 50', 'evaluation/final/eval-1011_Transfer_Learning_Image_Augmentation--RetinaNet-Resnet50-body-shots-eval.csv'),
             ('RetinaNet 152', 'evaluation/final/eval-1011_Transfer_Learning_Image_Augmentation--RetinaNet-Resnet152-body-shots-eval.csv'),
         )
     },
 
-    # TODO: evaluate yolo3 and frcnn
     # {
     #     'label': '1010-all-cases',
+    #     'caption': 'Training on Puppet Dataset, fine-tuning backbone from Transfer Learning (no image augmentation), test on All Cases Dataset (env: 1003)',
+    #     'tables': (
+    # ('RetinaNet 50', 'evaluation/final/eval-1010_Image_Augmentation--RetinaNet-Resnet50-all-cases-eval.csv'),
+    # ('RetinaNet 152', 'evaluation/final/eval-1010_Image_Augmentation--RetinaNet-Resnet152-all-cases-eval.csv'),
+    #     )
+    # },
+
+    # ====================================================
+    # 1011b – Medium Image Augmentation, Transfer Learning
+    # ====================================================
+    {
+        'label': '1011b',
+        'caption': 'Training on Puppet Dataset, Medium Image Augmentation with Transfer Learning (frozen Backbone), test on Puppet Dataset (env: 1011b)',
+        'tables': (
+            ('RetinaNet 50', 'evaluation/final/eval-1011b_Transfer_Learning_Image_Augmentation--RetinaNet-Resnet50.csv'),
+            ('RetinaNet 152', 'evaluation/final/eval-1011b_Transfer_Learning_Image_Augmentation--RetinaNet-Resnet152.csv'),
+        )
+    },
+    {
+        'label': '1011b-body-shots',
+        'caption': 'Training on Puppet Dataset, Medium Image Augmentation with Transfer Learning (frozen Backbone), test on Full Body Shots Dataset (env: 1011b)',
+        'tables': (
+            ('RetinaNet 50', 'evaluation/final/eval-1011b_Transfer_Learning_Image_Augmentation--RetinaNet-Resnet50-body-shots-eval.csv'),
+            ('RetinaNet 152', 'evaluation/final/eval-1011b_Transfer_Learning_Image_Augmentation--RetinaNet-Resnet152-body-shots-eval.csv'),
+        )
+    },
+
+    # {
+    #     'label': '1011b-all-cases',
+    #     'caption': 'Training on Puppet Dataset, fine-tuning backbone from Transfer Learning (no image augmentation), test on All Cases Dataset (env: 1003)',
+    #     'tables': (
+    # ('RetinaNet 50', 'evaluation/final/eval-1010_Image_Augmentation--RetinaNet-Resnet50-all-cases-eval.csv'),
+    # ('RetinaNet 152', 'evaluation/final/eval-1010_Image_Augmentation--RetinaNet-Resnet152-all-cases-eval.csv'),
+    #     )
+    # },
+
+    # =================================================
+    # 1011c – Low Image Augmentation, Transfer Learning
+    # =================================================
+    {
+        'label': '1011c',
+        'caption': 'Training on Puppet Dataset, Low Image Augmentation with Transfer Learning (frozen Backbone), test on Puppet Dataset (env: 1011c)',
+        'tables': (
+            ('RetinaNet 50', 'evaluation/final/eval-1011c_Transfer_Learning_Image_Augmentation--RetinaNet-Resnet50.csv'),
+            ('RetinaNet 152', 'evaluation/final/eval-1011c_Transfer_Learning_Image_Augmentation--RetinaNet-Resnet152.csv'),
+        )
+    },
+    {
+        'label': '1011c-body-shots',
+        'caption': 'Training on Puppet Dataset, Low Image Augmentation with Transfer Learning (frozen Backbone), test on Full Body Shots Dataset (env: 1011c)',
+        'tables': (
+            ('RetinaNet 50', 'evaluation/final/eval-1011c_Transfer_Learning_Image_Augmentation--RetinaNet-Resnet50-body-shots-eval.csv'),
+            ('RetinaNet 152', 'evaluation/final/eval-1011c_Transfer_Learning_Image_Augmentation--RetinaNet-Resnet152-body-shots-eval.csv'),
+        )
+    },
+
+    # {
+    #     'label': '1011c-all-cases',
+    #     'caption': 'Training on Puppet Dataset, fine-tuning backbone from Transfer Learning (no image augmentation), test on All Cases Dataset (env: 1003)',
+    #     'tables': (
+    # ('RetinaNet 50', 'evaluation/final/eval-1010_Image_Augmentation--RetinaNet-Resnet50-all-cases-eval.csv'),
+    # ('RetinaNet 152', 'evaluation/final/eval-1010_Image_Augmentation--RetinaNet-Resnet152-all-cases-eval.csv'),
+    #     )
+    # },
+
+    # =========================================================
+    # 1012 – Image Augmentation, Transfer Learning, Fine Tuning
+    # =========================================================
+    {
+        'label': '1012',
+        'caption': 'Training on Puppet Dataset, Image Augmentation with Transfer Learning (fine tuning Backbone), test on Puppet Dataset (env: 1012)',
+        'tables': (
+            ('RetinaNet 50', 'evaluation/final/eval-1012_Transfer_Learning_Image_Augmentation_Fine_Tuning--RetinaNet-Resnet50.csv'),
+            ('RetinaNet 152', 'evaluation/final/eval-1012_Transfer_Learning_Image_Augmentation_Fine_Tuning--RetinaNet-Resnet152.csv'),
+        )
+    },
+    {
+        'label': '1012-body-shots',
+        'caption': 'Training on Puppet Dataset, Image Augmentation with Transfer Learning (fine tuning Backbone), test on Full Body Shots Dataset (env: 1012)',
+        'tables': (
+            ('RetinaNet 50', 'evaluation/final/eval-1012_Transfer_Learning_Image_Augmentation_Fine_Tuning--RetinaNet-Resnet50-body-shots-eval.csv'),
+            ('RetinaNet 152', 'evaluation/final/eval-1012_Transfer_Learning_Image_Augmentation_Fine_Tuning--RetinaNet-Resnet152-body-shots-eval.csv'),
+        )
+    },
+
+    # {
+    #     'label': '1012-all-cases',
+    #     'caption': 'Training on Puppet Dataset, fine-tuning backbone from Transfer Learning (no image augmentation), test on All Cases Dataset (env: 1003)',
+    #     'tables': (
+    # ('RetinaNet 50', 'evaluation/final/eval-1010_Image_Augmentation--RetinaNet-Resnet50-all-cases-eval.csv'),
+    # ('RetinaNet 152', 'evaluation/final/eval-1010_Image_Augmentation--RetinaNet-Resnet152-all-cases-eval.csv'),
+    #     )
+    # },
+
+    # =================================================================
+    # 1012b – Medium Image Augmentation, Transfer Learning, Fine Tuning
+    # =================================================================
+    {
+        'label': '1012b',
+        'caption': 'Training on Puppet Dataset, Image Augmentation with Transfer Learning (fine tuning Backbone), test on Puppet Dataset (env: 1012b)',
+        'tables': (
+            ('RetinaNet 50', 'evaluation/final/eval-1012b_Transfer_Learning_Image_Augmentation_Fine_Tuning--RetinaNet-Resnet50.csv'),
+            ('RetinaNet 152', 'evaluation/final/eval-1012b_Transfer_Learning_Image_Augmentation_Fine_Tuning--RetinaNet-Resnet152.csv'),
+        )
+    },
+    {
+        'label': '1012b-body-shots',
+        'caption': 'Training on Puppet Dataset, Image Augmentation with Transfer Learning (fine tuning Backbone), test on Full Body Shots Dataset (env: 1012b)',
+        'tables': (
+            ('RetinaNet 50', 'evaluation/final/eval-1012b_Transfer_Learning_Image_Augmentation_Fine_Tuning--RetinaNet-Resnet50-body-shots-eval.csv'),
+            ('RetinaNet 152', 'evaluation/final/eval-1012b_Transfer_Learning_Image_Augmentation_Fine_Tuning--RetinaNet-Resnet152-body-shots-eval.csv'),
+        )
+    },
+
+    # {
+    #     'label': '1012b-all-cases',
+    #     'caption': 'Training on Puppet Dataset, fine-tuning backbone from Transfer Learning (no image augmentation), test on All Cases Dataset (env: 1003)',
+    #     'tables': (
+    # ('RetinaNet 50', 'evaluation/final/eval-1010_Image_Augmentation--RetinaNet-Resnet50-all-cases-eval.csv'),
+    # ('RetinaNet 152', 'evaluation/final/eval-1010_Image_Augmentation--RetinaNet-Resnet152-all-cases-eval.csv'),
+    #     )
+    # },
+
+    # ==============================================================
+    # 1012c – Low Image Augmentation, Transfer Learning, Fine Tuning
+    # ==============================================================
+    {
+        'label': '1012c',
+        'caption': 'Training on Puppet Dataset, Low Image Augmentation with Transfer Learning (fine tuning Backbone), test on Puppet Dataset (env: 1012c)',
+        'tables': (
+            ('RetinaNet 50', 'evaluation/final/eval-1012c_Transfer_Learning_Image_Augmentation_Fine_Tuning--RetinaNet-Resnet50.csv'),
+            ('RetinaNet 152', 'evaluation/final/eval-1012c_Transfer_Learning_Image_Augmentation_Fine_Tuning--RetinaNet-Resnet152.csv'),
+        )
+    },
+    {
+        'label': '1012c-body-shots',
+        'caption': 'Training on Puppet Dataset, Low Image Augmentation with Transfer Learning (fine tuning Backbone), test on Full Body Shots Dataset (env: 1012c)',
+        'tables': (
+            ('RetinaNet 50', 'evaluation/final/eval-1012c_Transfer_Learning_Image_Augmentation_Fine_Tuning--RetinaNet-Resnet50-body-shots-eval.csv'),
+            ('RetinaNet 152', 'evaluation/final/eval-1012c_Transfer_Learning_Image_Augmentation_Fine_Tuning--RetinaNet-Resnet152-body-shots-eval.csv'),
+        )
+    },
+
+    # {
+    #     'label': '1012c-all-cases',
     #     'caption': 'Training on Puppet Dataset, fine-tuning backbone from Transfer Learning (no image augmentation), test on All Cases Dataset (env: 1003)',
     #     'tables': (
     # ('RetinaNet 50', 'evaluation/final/eval-1010_Image_Augmentation--RetinaNet-Resnet50-all-cases-eval.csv'),

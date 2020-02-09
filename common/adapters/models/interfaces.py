@@ -1,5 +1,6 @@
 import os
 import re
+import sys
 from abc import ABCMeta, abstractmethod
 from os.path import join
 from typing import Tuple, List
@@ -7,7 +8,8 @@ from typing import Tuple, List
 import numpy as np
 
 from tensorflow.python.keras import Model
-from tensorflow.python.keras.callbacks import ModelCheckpoint, Callback, EarlyStopping
+from tensorflow.python.keras.callbacks import Callback
+from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.callbacks import TensorBoard
 
 from common.detection import Detection
@@ -185,23 +187,34 @@ class AbstractModelAdapter:
         Train the network
         :return:
         """
-        train_dataset, val_dataset, __ = self.env.get_datasets()
-        val_dataset.augmentation = None
 
-        self.train_model.fit_generator(
-            generator=train_dataset,
-            steps_per_epoch=np.ceil(train_dataset.size() / self.env.batch_size),
-            epochs=self.env.epochs,
-            initial_epoch=self.train_model.epoch,
-            verbose=1,
-            validation_data=val_dataset,
-            validation_steps=np.ceil(val_dataset.size() / self.env.batch_size),
-            max_queue_size=10,
-            workers=4,
-            use_multiprocessing=True,
-            shuffle=False,
-            callbacks=self.get_callbacks(loss_patience, val_loss_patience)
-        )
+        base_env_name = self.env.name
+
+        for i, datasets in enumerate(self.env.iter_datasets()):
+
+            if self.env.auto_xval:
+                self.env.name = re.sub(r'^(\d{4})', r'\1{}'.format('abcdefghijklmnopqrstuvwxyz'[i]), base_env_name)
+                sys.stdout.write('--> X-Val: Training model {} of {} ({}):'.format(i, self.env.k_fold_x_val, self.env.name))
+
+            train_dataset, val_dataset, test_dataset = datasets
+
+            assert val_dataset.augmentation is None
+            assert test_dataset.augmentation is None
+
+            self.train_model.fit_generator(
+                generator=train_dataset,
+                steps_per_epoch=np.ceil(train_dataset.size() / self.env.batch_size),
+                epochs=self.env.epochs,
+                initial_epoch=self.train_model.epoch,
+                verbose=1,
+                validation_data=val_dataset,
+                validation_steps=np.ceil(val_dataset.size() / self.env.batch_size),
+                max_queue_size=10,
+                workers=4,
+                use_multiprocessing=False,
+                shuffle=False,
+                callbacks=self.get_callbacks(loss_patience, val_loss_patience)
+            )
 
     @abstractmethod
     def predict(self, images, min_score=0.5) -> List[List[Detection]]:

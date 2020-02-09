@@ -131,7 +131,7 @@ class AbstractDataset:
             cls,
             train_dataset_path: str, val_dataset_path: str = None, test_dataset_path: str = None,
             dataset_split: Tuple = None, shuffle: bool = False, shuffle_seed: int = None, split_by_filename_base: bool = False,
-            max_examples_per_filename_base=0, k_fold_x_val: int = 1, x_val_k: int = 0, **kwargs):
+            max_examples_per_filename_base=0, k_fold_x_val: int = 1, x_val_k: int = 0, x_val_ignore_dataset: bool = False, **kwargs):
         """
         Factory method to create training-, validation- and test data from an external dataset.
         If no path is indicated for validation and test dataset, and a dataset_split tuple is
@@ -207,7 +207,7 @@ class AbstractDataset:
 
             test_image_ids = list(filter(lambda i: i not in train_image_ids and i not in val_image_ids, range(n_images)))
 
-            if k_fold_x_val > 1:
+            if k_fold_x_val > 1 and not x_val_ignore_dataset:
                 all_ids = train_image_ids + val_image_ids + test_image_ids
                 shift = n_images / k_fold_x_val
 
@@ -584,7 +584,7 @@ class AbstractDataset:
         else:
             batch_of_target_bboxes = batch_of_target_masks
 
-        batch_of_input_images = np.asarray(batch_of_input_images, dtype=np.float32)
+        # batch_of_input_images = np.asarray(batch_of_input_images, dtype=np.float32)
 
         return batch_of_input_images, batch_of_target_masks, batch_of_target_bboxes, batch_of_target_labels, self._num_classes
 

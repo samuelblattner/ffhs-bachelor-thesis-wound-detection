@@ -7,6 +7,7 @@ from os.path import join
 
 import cv2
 import numpy as np
+import re
 from PIL import Image
 
 from common.detection import Detection
@@ -184,221 +185,229 @@ class ModelSuite:
         plt.show()
 
     def _evaluate(self):
-        _, __, test_dataset = self.env.get_datasets()
 
-        all_detections = [[[] for i in range(test_dataset.num_classes())] for j in range(test_dataset.size())]
-        all_annotations = [[[] for i in range(test_dataset.num_classes())] for j in range(test_dataset.size())]
-        average_precisions = {}
-        min_score = 0.5
-        iou_thresholds = (0.1, 0.25, 0.5, 0.75, 0.9, 0.95)
+        base_name = self.env.name
 
-        annotations_loaded = {}
-        out = {}
-        full_path = join(self.env.evaluation_dir, self.env.full_config_name)
+        for i, datasets in enumerate(self.env.iter_datasets()):
 
-        # self.model.train_model[0].summary()
-        # self.model.train_model[1].summary()
+            train_dataset, val_dataset, test_dataset = datasets
 
-        if self.env.eval_heatmaps_overview:
-            fig, axs = plt.subplots(len(test_dataset.get_image_info()), 2, figsize=(10, 60))
+            if self.env.auto_xval:
+                self.env.name = re.sub(r'^(\d{4})', r'\1{}'.format('abcdefghijklmnopqrstuvwxyz'[i]), base_name)
 
-        if self.env.eval_heatmaps:
-            fullsize_fig, fullsize_axs = plt.subplots(1, 1, figsize=(20, 20))
+            all_detections = [[[] for i in range(test_dataset.num_classes())] for j in range(test_dataset.size())]
+            all_annotations = [[[] for i in range(test_dataset.num_classes())] for j in range(test_dataset.size())]
+            average_precisions = {}
+            min_score = 0.5
+            iou_thresholds = (0.1, 0.25, 0.5, 0.75, 0.9, 0.95)
 
-        for i, image_info in enumerate(test_dataset.get_image_info()):
-            raw_image = test_dataset.load_image(i)
-            dets = self.model.predict([raw_image], min_score)[0]
+            annotations_loaded = {}
+            out = {}
+            full_path = join(self.env.evaluation_dir, self.env.full_config_name)
+
+            # self.model.train_model[0].summary()
+            # self.model.train_model[1].summary()
 
             if self.env.eval_heatmaps_overview:
-                self.model.generate_inference_heatmaps(raw_image, axs[i, 1:])
+                fig, axs = plt.subplots(len(test_dataset.get_image_info()), 2, figsize=(10, 60))
 
             if self.env.eval_heatmaps:
-                self.model.generate_inference_heatmaps(raw_image, [fullsize_axs])
+                fullsize_fig, fullsize_axs = plt.subplots(1, 1, figsize=(20, 20))
 
-            mask_data, label_data = test_dataset.load_mask(i, True)
+            for i, image_info in enumerate(test_dataset.get_image_info()):
+                raw_image = test_dataset.load_image(i)
+                dets = self.model.predict([raw_image], min_score)[0]
 
-            if not annotations_loaded.get(i, False):
+                if self.env.eval_heatmaps_overview:
+                    self.model.generate_inference_heatmaps(raw_image, axs[i, 1:])
 
-                for box, label in zip(mask_data, label_data):
-                    all_annotations[i][int(label)].append(box)
+                if self.env.eval_heatmaps:
+                    self.model.generate_inference_heatmaps(raw_image, [fullsize_axs])
 
-                annotations_loaded[i] = True
+                mask_data, label_data = test_dataset.load_mask(i, True)
 
-            for det in dets:
-                all_detections[i][test_dataset.name_to_label(det.class_name)].append(det)
-                draw_box(raw_image, det.bbox, color=(255, 200, 0))
+                if not annotations_loaded.get(i, False):
 
-                caption = "{} {:.3f}".format(det.class_name, det.score)
-                cv2.putText(
-                    img=raw_image,
-                    text=caption,
-                    org=(int(det.bbox[0]), int(det.bbox[1]) - 10),
-                    fontFace=cv2.FONT_HERSHEY_PLAIN,
-                    fontScale=2,
-                    color=(255, 200, 0),
-                    thickness=3)
+                    for box, label in zip(mask_data, label_data):
+                        all_annotations[i][int(label)].append(box)
 
-            for k, klass in enumerate(all_annotations[i]):
-                for box in klass:
-                    draw_box(raw_image, box, color=(23, 245, 255))
+                    annotations_loaded[i] = True
 
-                    caption = "{}".format(test_dataset.label_to_name(k))
+                for det in dets:
+                    all_detections[i][test_dataset.name_to_label(det.class_name)].append(det)
+                    draw_box(raw_image, det.bbox, color=(255, 200, 0))
+
+                    caption = "{} {:.3f}".format(det.class_name, det.score)
                     cv2.putText(
                         img=raw_image,
                         text=caption,
-                        org=(int(box[0]), int(box[1]) - 10),
+                        org=(int(det.bbox[0]), int(det.bbox[1]) - 10),
                         fontFace=cv2.FONT_HERSHEY_PLAIN,
                         fontScale=2,
-                        color=(32, 245, 255),
+                        color=(255, 200, 0),
                         thickness=3)
 
-            # if self.env.eval_heatmaps:
+                for k, klass in enumerate(all_annotations[i]):
+                    for box in klass:
+                        draw_box(raw_image, box, color=(23, 245, 255))
 
-            # axs[i, 0].imshow(raw_image.astype(np.uint8))
+                        caption = "{}".format(test_dataset.label_to_name(k))
+                        cv2.putText(
+                            img=raw_image,
+                            text=caption,
+                            org=(int(box[0]), int(box[1]) - 10),
+                            fontFace=cv2.FONT_HERSHEY_PLAIN,
+                            fontScale=2,
+                            color=(32, 245, 255),
+                            thickness=3)
 
-            # plt.show()
-            # exit(0)
-            if self.env.eval_images:
+                # if self.env.eval_heatmaps:
+
+                # axs[i, 0].imshow(raw_image.astype(np.uint8))
+
                 # plt.show()
+                # exit(0)
+                if self.env.eval_images:
+                    # plt.show()
+                    os.makedirs(full_path, exist_ok=True)
+                    with open('{}/eval-{}{}{}-{}.png'.format(
+                            full_path,
+                            self.model.full_name,
+                            self.env.eval_name_suffix if self.env.eval_name_suffix else '',
+                            '-fullsize' if self.env.full_size_eval else '',
+                            i
+                    ), 'wb') as f:
+                        Image.fromarray(raw_image.astype(np.uint8)).save(f)
+
+                if self.env.eval_heatmaps:
+                    # plt.show()
+                    os.makedirs(full_path, exist_ok=True)
+                    with open('{}/eval-{}{}{}-{}-heatmap.png'.format(
+                            full_path,
+                            self.model.full_name,
+                            self.env.eval_name_suffix if self.env.eval_name_suffix else '',
+                            '-fullsize' if self.env.full_size_eval else '',
+                            i
+                    ), 'wb') as f:
+                        fullsize_fig.savefig(f, format='png')
+                        # Image.fromarray(fullsize_fig.astype(np.uint8)).save(f)
+
+            if self.env.eval_heatmaps_overview:
+                plt.show()
                 os.makedirs(full_path, exist_ok=True)
-                with open('{}/eval-{}{}{}-{}.png'.format(
-                        full_path,
-                        self.model.full_name,
-                        self.env.eval_name_suffix if self.env.eval_name_suffix else '',
-                        '-fullsize' if self.env.full_size_eval else '',
-                        i
-                ), 'wb') as f:
-                    Image.fromarray(raw_image.astype(np.uint8)).save(f)
+                with open('{}/eval-{}{}{}.pdf'.format(full_path, self.model.full_name,
+                                                      self.env.eval_name_suffix if self.env.eval_name_suffix else '',
+                                                      '-fullsize' if self.env.full_size_eval else ''), 'wb') as f:
+                    fig.savefig(f, format='pdf')
+                    # Image.fromarray(plt).save(f)
 
-            if self.env.eval_heatmaps:
-                # plt.show()
-                os.makedirs(full_path, exist_ok=True)
-                with open('{}/eval-{}{}{}-{}-heatmap.png'.format(
-                        full_path,
-                        self.model.full_name,
-                        self.env.eval_name_suffix if self.env.eval_name_suffix else '',
-                        '-fullsize' if self.env.full_size_eval else '',
-                        i
-                ), 'wb') as f:
-                    fullsize_fig.savefig(f, format='png')
-                    # Image.fromarray(fullsize_fig.astype(np.uint8)).save(f)
+            for iou_threshold in iou_thresholds:
 
-        if self.env.eval_heatmaps_overview:
-            plt.show()
-            os.makedirs(full_path, exist_ok=True)
-            with open('{}/eval-{}{}{}.pdf'.format(full_path, self.model.full_name,
-                                                  self.env.eval_name_suffix if self.env.eval_name_suffix else '',
-                                                  '-fullsize' if self.env.full_size_eval else ''), 'wb') as f:
-                fig.savefig(f, format='pdf')
-                # Image.fromarray(plt).save(f)
+                out[str(iou_threshold)] = {}
 
-        for iou_threshold in iou_thresholds:
+                for label in range(len(test_dataset.get_label_names())):
 
-            out[str(iou_threshold)] = {}
+                    out[str(iou_threshold)][str(label)] = {}
+                    false_positives = np.zeros((0,))
+                    true_positives = np.zeros((0,))
+                    scores = np.zeros((0,))
+                    num_annotations = 0.0
 
-            for label in range(len(test_dataset.get_label_names())):
+                    for i, xy in enumerate(test_dataset.get_image_info()):
+                        # X, Y = xy
+                        detections = all_detections[i][label]
 
-                out[str(iou_threshold)][str(label)] = {}
-                false_positives = np.zeros((0,))
-                true_positives = np.zeros((0,))
-                scores = np.zeros((0,))
-                num_annotations = 0.0
+                        annotations = all_annotations[i][label]
+                        annotations = np.asarray(annotations)
 
-                for i, xy in enumerate(test_dataset.get_image_info()):
-                    # X, Y = xy
-                    detections = all_detections[i][label]
+                        num_annotations += annotations.shape[0]
+                        detected_annotations = []
 
-                    annotations = all_annotations[i][label]
-                    annotations = np.asarray(annotations)
-
-                    num_annotations += annotations.shape[0]
-                    detected_annotations = []
-
-                    if not detections:
-                        continue
-
-                    for detection in detections:
-                        scores = np.append(scores, detection.score)
-
-                        if annotations.shape[0] == 0:
-                            false_positives = np.append(false_positives, 1)
-                            true_positives = np.append(true_positives, 0)
+                        if not detections:
                             continue
 
-                        overlaps = compute_overlap(np.expand_dims(np.asarray(detection.bbox, dtype=np.double), axis=0), annotations)
+                        for detection in detections:
+                            scores = np.append(scores, detection.score)
 
-                        # print('Overlaps for label ', label)
-                        # print(overlaps)
-                        assigned_annotation = np.argmax(overlaps, axis=1)
-                        max_overlap = overlaps[0, assigned_annotation]
+                            if annotations.shape[0] == 0:
+                                false_positives = np.append(false_positives, 1)
+                                true_positives = np.append(true_positives, 0)
+                                continue
 
-                        # Append to array for every true or false positive
-                        if max_overlap >= iou_threshold and assigned_annotation not in detected_annotations:
-                            false_positives = np.append(false_positives, 0)
-                            true_positives = np.append(true_positives, 1)
-                            detected_annotations.append(assigned_annotation)
-                        else:
-                            false_positives = np.append(false_positives, 1)
-                            true_positives = np.append(true_positives, 0)
+                            overlaps = compute_overlap(np.expand_dims(np.asarray(detection.bbox, dtype=np.double), axis=0), annotations)
 
-                    # no annotations -> AP for this class is 0 (is this correct?)
-                if num_annotations == 0:
-                    average_precisions[label] = 0, 0
-                    continue
+                            # print('Overlaps for label ', label)
+                            # print(overlaps)
+                            assigned_annotation = np.argmax(overlaps, axis=1)
+                            max_overlap = overlaps[0, assigned_annotation]
 
-                    # sort by score
-                indices = np.argsort(-scores)
+                            # Append to array for every true or false positive
+                            if max_overlap >= iou_threshold and assigned_annotation not in detected_annotations:
+                                false_positives = np.append(false_positives, 0)
+                                true_positives = np.append(true_positives, 1)
+                                detected_annotations.append(assigned_annotation)
+                            else:
+                                false_positives = np.append(false_positives, 1)
+                                true_positives = np.append(true_positives, 0)
 
-                # Just
-                false_positives = false_positives[indices]
-                true_positives = true_positives[indices]
+                        # no annotations -> AP for this class is 0 (is this correct?)
+                    if num_annotations == 0:
+                        average_precisions[label] = 0, 0
+                        continue
 
-                # compute false positives and true positives
-                false_positives = np.cumsum(false_positives)
-                true_positives = np.cumsum(true_positives)
+                        # sort by score
+                    indices = np.argsort(-scores)
 
-                # compute recall and precision
-                recall = true_positives / num_annotations
-                precision = true_positives / np.maximum(true_positives + false_positives, np.finfo(np.float64).eps)
+                    # Just
+                    false_positives = false_positives[indices]
+                    true_positives = true_positives[indices]
 
-                # compute average precision
-                average_precision = _compute_ap(recall, precision)
-                average_precisions[label] = average_precision, num_annotations
+                    # compute false positives and true positives
+                    false_positives = np.cumsum(false_positives)
+                    true_positives = np.cumsum(true_positives)
 
-                out[str(iou_threshold)][str(label)] = {
-                    'map': average_precision,
-                    'num_anns': num_annotations,
-                    'recall': recall[-1] if recall.shape[0] > 0 else 0.0,
-                    'precision': precision[-1] if precision.shape[0] > 0 else 0.0
-                }
-        print(out)
+                    # compute recall and precision
+                    recall = true_positives / num_annotations
+                    precision = true_positives / np.maximum(true_positives + false_positives, np.finfo(np.float64).eps)
 
-        csv = ''
+                    # compute average precision
+                    average_precision = _compute_ap(recall, precision)
+                    average_precisions[label] = average_precision, num_annotations
 
-        csv += 'Class,IoU,n,Precision,Recall,F1,mAP\n'
-        for label in range(len(test_dataset.get_label_names())):
-            csv += '{}'.format(test_dataset.label_to_name(label))
+                    out[str(iou_threshold)][str(label)] = {
+                        'map': average_precision,
+                        'num_anns': num_annotations,
+                        'recall': recall[-1] if recall.shape[0] > 0 else 0.0,
+                        'precision': precision[-1] if precision.shape[0] > 0 else 0.0
+                    }
+            print(out)
 
-            for key, val in out.items():
-                val = val.get(str(label))
-                prec = val.get('precision', 0)
-                rec = val.get('recall', 0)
-                csv += ',{},{},{},{},{},{}\n'.format(
-                    key, val.get('num_anns', 0),
-                    '{:0.2f}%'.format(prec * 100),
-                    '{:0.2f}%'.format(rec * 100),
-                    '{:0.2f}'.format((2 * prec * rec / (prec + rec)) if prec > 0 and rec > 0 else 0),
-                    '{:0.2f}%'.format(val.get('map', 0) * 100)
-                )
+            csv = ''
 
-        os.makedirs(full_path, exist_ok=True)
+            csv += 'Class,IoU,n,Precision,Recall,F1,mAP\n'
+            for label in range(len(test_dataset.get_label_names())):
+                csv += '{}'.format(test_dataset.label_to_name(label))
 
-        with open('{}/eval-{}{}{}.csv'.format(full_path, self.model.full_name,
-                                              self.env.eval_name_suffix if self.env.eval_name_suffix else '',
-                                              '-fullsize' if self.env.full_size_eval else ''), 'w', encoding='utf-8') as f:
-            f.write(csv)
+                for key, val in out.items():
+                    val = val.get(str(label))
+                    prec = val.get('precision', 0)
+                    rec = val.get('recall', 0)
+                    csv += ',{},{},{},{},{},{}\n'.format(
+                        key, val.get('num_anns', 0),
+                        '{:0.2f}%'.format(prec * 100),
+                        '{:0.2f}%'.format(rec * 100),
+                        '{:0.2f}'.format((2 * prec * rec / (prec + rec)) if prec > 0 and rec > 0 else 0),
+                        '{:0.2f}%'.format(val.get('map', 0) * 100)
+                    )
 
-        return out
+            os.makedirs(full_path, exist_ok=True)
+
+            with open('{}/eval-{}{}{}.csv'.format(full_path, self.model.full_name,
+                                                  self.env.eval_name_suffix if self.env.eval_name_suffix else '',
+                                                  '-fullsize' if self.env.full_size_eval else ''), 'w', encoding='utf-8') as f:
+                f.write(csv)
+
+            # return out
 
     def execute(self):
         """

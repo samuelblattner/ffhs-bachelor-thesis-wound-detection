@@ -128,6 +128,10 @@ class Environment:
     __val_dataset: AbstractDataset = None
     __test_dataset: AbstractDataset = None
 
+    __x_val_train_datasets: List[AbstractDataset] = []
+    __x_val_val_datasets: List[AbstractDataset] = []
+    __x_val_test_datasets: List[AbstractDataset] = []
+
     __num_classes: int = 13
 
     evaluation_dir: str = './evaluation'
@@ -142,6 +146,8 @@ class Environment:
     eval_images: bool = False
     k_fold_x_val: int = 1
     x_val_k: int = 0
+    x_val_ignore_dataset: bool = False
+    auto_xval: bool = False
 
     @classmethod
     def from_json(cls, path: str):
@@ -187,7 +193,10 @@ class Environment:
                 env.data_root = config_dict.get('data_dir', env.data_root)
                 env.datasets = config_dict.get('datasets', [])
                 env.k_fold_x_val = config_dict.get('k_fold_x_val', env.k_fold_x_val)
-                env.x_val_k = config_dict.get('x_val_k', env.x_val_k)
+                x_val_k = config_dict.get('x_val_k', env.x_val_k)
+                env.auto_xval = x_val_k == 'auto'
+                env.x_val_ignore_dataset = config_dict.get('x_val_ignore_dataset', env.x_val_ignore_dataset)
+                env.x_val_k = -1 if env.auto_xval else x_val_k
 
                 return env
         except FileNotFoundError:
@@ -245,56 +254,78 @@ class Environment:
         if not self.valid:
             self.validate()
 
-        datasets = self.datasets if len(self.datasets) > 0 else [{
-            'name': self.train_dataset_name,
-            'split': self.dataset_split,
-            'pre_image_scale': self.pre_image_scale,
-            'split_by_filename_base': self.split_by_filename_base,
-            'max_examples_per_filename_base': self.max_examples_per_filename_base,
-            'augmentation': self.inflate_augmentation(self.augmentation) if self.augmentation else None
-        }]
+        xval_iter = 0
+        max_xval_iter = self.k_fold_x_val if self.auto_xval else 1
 
-        train_datasets = []
-        val_datasets = []
-        test_datasets = []
+        self.__x_val_train_datasets = []
+        self.__x_val_val_datasets = []
+        self.__x_val_test_datasets = []
 
-        for dataset in datasets:
-            # Transformations
-            augmentation = self.inflate_augmentation(dataset.get('augmentation', {}))
-            # if self.augmentation and type(self.augmentation) == dict:
-            #     self.augmentation = self.inflate_augmentation(self.augmentation)
-            train_dataset, val_dataset, test_dataset = self.dataset_class.create_datasets(
-                train_dataset_path=join(self.data_root, dataset.get('name')),
-                dataset_split=dataset.get('split'),
-                shuffle=self.shuffle_dataset,
-                shuffle_seed=self.shuffle_seed,
-                batch_size=self.batch_size,
-                max_image_side_length=self.max_image_side_length,
-                augmentation=augmentation,
-                center_color_to_imagenet=self.center_color_to_imagenet,
-                simplify_classes=self.simplify_classes,
-                image_scale_mode=self.img_scale_mode,
-                pre_image_scale=dataset.get('pre_image_scale', 0.5),
-                split_by_filename_base=dataset.get('split_by_filename_base'),
-                max_examples_per_filename_base=dataset.get('max_examples_per_filename_base', 0),
-                k_fold_x_val=self.k_fold_x_val,
-                x_val_k=self.x_val_k
-            )
+        for i in range(xval_iter, max_xval_iter):
 
-            train_dataset.IMAGE_FACTOR = val_dataset.IMAGE_FACTOR = test_dataset.IMAGE_FACTOR = dataset.get('pre_image_scale', 0.5)
+            datasets = self.datasets if len(self.datasets) > 0 else [{
+                'name': self.train_dataset_name,
+                'split': self.dataset_split,
+                'pre_image_scale': self.pre_image_scale,
+                'split_by_filename_base': self.split_by_filename_base,
+                'max_examples_per_filename_base': self.max_examples_per_filename_base,
+                'augmentation': self.inflate_augmentation(self.augmentation) if self.augmentation else None
+            }]
 
-            self.class_names = train_dataset.get_label_names()
+            train_datasets = []
+            val_datasets = []
+            test_datasets = []
 
-            train_datasets.append(train_dataset)
-            val_datasets.append(val_dataset)
-            test_datasets.append(test_dataset)
+            for dataset in datasets:
+                # Transformations
+                augmentation = self.inflate_augmentation(dataset.get('augmentation', {}))
+                # if self.augmentation and type(self.augmentation) == dict:
+                #     self.augmentation = self.inflate_augmentation(self.augmentation)
+                train_dataset, val_dataset, test_dataset = self.dataset_class.create_datasets(
+                    train_dataset_path=join(self.data_root, dataset.get('name')),
+                    dataset_split=dataset.get('split'),
+                    shuffle=self.shuffle_dataset,
+                    shuffle_seed=self.shuffle_seed,
+                    batch_size=self.batch_size,
+                    max_image_side_length=self.max_image_side_length,
+                    augmentation=augmentation,
+                    center_color_to_imagenet=self.center_color_to_imagenet,
+                    simplify_classes=self.simplify_classes,
+                    image_scale_mode=self.img_scale_mode,
+                    pre_image_scale=dataset.get('pre_image_scale', 0.5),
+                    split_by_filename_base=dataset.get('split_by_filename_base'),
+                    max_examples_per_filename_base=dataset.get('max_examples_per_filename_base', 0),
+                    k_fold_x_val=self.k_fold_x_val,
+                    x_val_k=self.x_val_k if not self.auto_xval else i,
+                    x_val_ignore_dataset=self.x_val_ignore_dataset
+                )
 
-        self.__train_dataset = UnionDataset(train_datasets, batch_size=self.batch_size)
-        self.__val_dataset = UnionDataset(val_datasets, batch_size=self.batch_size)
-        self.__test_dataset = UnionDataset(test_datasets, batch_size=self.batch_size)
+                train_dataset.IMAGE_FACTOR = val_dataset.IMAGE_FACTOR = test_dataset.IMAGE_FACTOR = dataset.get('pre_image_scale', 0.5)
+
+                self.class_names = train_dataset.get_label_names()
+
+                train_datasets.append(train_dataset)
+                val_datasets.append(val_dataset)
+                test_datasets.append(test_dataset)
+
+            self.__train_dataset = UnionDataset(train_datasets, batch_size=self.batch_size)
+            self.__val_dataset = UnionDataset(val_datasets, batch_size=self.batch_size)
+            self.__test_dataset = UnionDataset(test_datasets, batch_size=self.batch_size)
+
+            self.__x_val_train_datasets.append(self.__train_dataset)
+            self.__x_val_val_datasets.append(self.__val_dataset)
+            self.__x_val_test_datasets.append(self.__test_dataset)
 
     def get_datasets(self) -> Tuple[AbstractDataset, AbstractDataset, AbstractDataset]:
         return self.__train_dataset, self.__val_dataset, self.__test_dataset
+
+    def iter_datasets(self):
+        def dataset_iter():
+
+            for train_dataset, val_dataset, test_dataset in zip(self.__x_val_train_datasets, self.__x_val_val_datasets, self.__x_val_test_datasets):
+                yield train_dataset, val_dataset, test_dataset
+
+        return dataset_iter()
 
     def validate(self):
         """

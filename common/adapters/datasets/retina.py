@@ -178,41 +178,41 @@ class RetinaDataset(AbstractDataset, Generator):
             # Uncomment for DEBUG
             # ==========================
             # ==========================
-            draw = image.copy()
-
-            draw[..., 0] += 123.68  # R
-            draw[..., 1] += 116.779  # G
-            draw[..., 2] += 103.939  # B
-
-            for ann in annotations:
-
-                for box in ann.get('bboxes'):
-                    draw_box(draw, [int(box[1]), int(box[0]), int(box[3]), int(box[2])], color=(255, 200, 0))
-                    caption = "{} {:.3f}".format('hur', 0)
-
-                    # print(self.labels.index(obj['name'])  )
-
-                    cv2.putText(
-                        img=draw,
-                        text=caption,
-                        org=(int(box[0]), int(box[1]) - 10),
-                        fontFace=cv2.FONT_HERSHEY_PLAIN,
-                        fontScale=1,
-                        color=(255, 200, 0),
-                        thickness=1)
-
-            from matplotlib import pyplot as plt
-            fig = plt.figure(figsize=(10,15))
-            plt.axis('off')
-            try:
-                plt.imshow(draw.astype(np.uint8))
-            except:
-                pass
-            plt.show()
-            with open('train_images/{}.png'.format(randint(0, 1000)), 'wb') as f:
-                fig.savefig(f, format='png')
-
-            exit(0)
+            # draw = image.copy()
+            #
+            # draw[..., 0] += 123.68  # R
+            # draw[..., 1] += 116.779  # G
+            # draw[..., 2] += 103.939  # B
+            #
+            # for ann in annotations:
+            #
+            #     for box in ann.get('bboxes'):
+            #         draw_box(draw, [int(box[1]), int(box[0]), int(box[3]), int(box[2])], color=(255, 200, 0))
+            #         caption = "{} {:.3f}".format('hur', 0)
+            #
+            #         # print(self.labels.index(obj['name'])  )
+            #
+            #         cv2.putText(
+            #             img=draw,
+            #             text=caption,
+            #             org=(int(box[0]), int(box[1]) - 10),
+            #             fontFace=cv2.FONT_HERSHEY_PLAIN,
+            #             fontScale=1,
+            #             color=(255, 200, 0),
+            #             thickness=1)
+            #
+            # from matplotlib import pyplot as plt
+            # fig = plt.figure(figsize=(10,15))
+            # plt.axis('off')
+            # try:
+            #     plt.imshow(draw.astype(np.uint8))
+            # except:
+            #     pass
+            # plt.show()
+            # with open('train_images/{}.png'.format(randint(0, 1000)), 'wb') as f:
+            #     fig.savefig(f, format='png')
+            #
+            # exit(0)
             # ==========================
             # ==========================
 

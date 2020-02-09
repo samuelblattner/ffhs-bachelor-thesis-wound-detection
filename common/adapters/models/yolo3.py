@@ -106,7 +106,7 @@ class Yolo3Adapter(AbstractModelAdapter):
         if self.env.max_image_side_length is None:
             self.env.max_image_side_length = 416
 
-        checkpoint_dir_path, checkpoint_path = self.get_checkpoint_location()
+        checkpoint_dir_path, checkpoint_path, latest_checkpoint_path = self.get_checkpoint_location()
         try:
             last = self.find_last()
         except:
@@ -139,7 +139,7 @@ class Yolo3Adapter(AbstractModelAdapter):
             The path of the last checkpoint file
         """
         # Get directory names. Each directory corresponds to a model
-        checkpoint_dir_path, checkpoint_path = self.get_checkpoint_location()
+        checkpoint_dir_path, checkpoint_path, latest_checkpoint_path = self.get_checkpoint_location()
 
         dir_names = next(os.walk(self.env.checkpoint_root))[1]
         key = self.full_name

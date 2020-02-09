@@ -46,7 +46,7 @@ class FRCNNAdapter(AbstractModelAdapter):
         self.cfg.use_vertical_flips = False
         self.cfg.rot_90 = False
         self.cfg.im_size = self.env.min_image_side_length or 600
-        model_dir, model_path = self.get_checkpoint_location()
+        model_dir, model_path, latest_checkpoint_path = self.get_checkpoint_location()
         self.cfg.model_path = model_path
 
         if K.image_dim_ordering() == 'th':
@@ -133,7 +133,7 @@ class FRCNNAdapter(AbstractModelAdapter):
 
         import tensorflow as tf
 
-        dir, path = self.get_checkpoint_location()
+        dir, path,  latest_checkpoint_path = self.get_checkpoint_location()
 
         train_dataset, val_dataset, __ = self.env.get_datasets()
         val_dataset.cfg = train_dataset.cfg = self.cfg

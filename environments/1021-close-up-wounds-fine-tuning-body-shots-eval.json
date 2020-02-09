@@ -1,7 +1,7 @@
 {
   "name": "1020 Close Up Wounds Fine Tuning",
   "description": "Default Network Configurations using Transfer Learning and Image Augmentation on Close Up Wounds Dataset",
-  "batch_size": 1,
+  "batch_size": 5,
   "max_epochs": 1000,
   "shuffle_dataset": true,
   "shuffle_seed": 0,

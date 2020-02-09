@@ -57,9 +57,6 @@ class BaseRetinaAdapter(AbstractModelAdapter):
     def build_models(self) -> Tuple[Model, Model]:
         backbone = models.backbone(self.BACKBONE_NAME)
 
-        self.env.img_scale_mode = 'just'
-        self.env.center_color_to_imagenet = True
-
         print('Using Transfer Learning: ', self.env.use_transfer_learning)
         print('Freezing backbone: ', self.env.use_transfer_learning and not self.env.allow_base_layer_training)
 
@@ -109,15 +106,12 @@ class BaseRetinaAdapter(AbstractModelAdapter):
             # Scale image to target size
             if not self.env.full_size_eval:
 
-                print(initial_width, initial_height)
-
                 # image, w, scale, p, c = resize_image(
                 #     images[0], max_dim=self.env.max_image_side_length, min_dim=self.env.min_image_side_length
                 # )
 
                 image, scale = resize_image(image, self.env.min_image_side_length or 800, self.env.max_image_side_length or 1333)
 
-                print(image.shape, scale)
                 # from matplotlib import pyplot as plt
                 # plt.imshow(image.astype('uint8'))
                 # plt.show()

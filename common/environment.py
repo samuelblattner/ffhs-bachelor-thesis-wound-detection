@@ -136,7 +136,7 @@ class Environment:
 
     evaluation_dir: str = './evaluation'
     eval_name_suffix: str = None
-    pre_image_scale: float = 0.5
+    pre_image_scale: float = 1.0
     split_by_filename_base: bool = False
     max_examples_per_filename_base: int = 0
     gpu_no: int = 0
@@ -277,10 +277,7 @@ class Environment:
             test_datasets = []
 
             for dataset in datasets:
-                # Transformations
                 augmentation = self.inflate_augmentation(dataset.get('augmentation', {}))
-                # if self.augmentation and type(self.augmentation) == dict:
-                #     self.augmentation = self.inflate_augmentation(self.augmentation)
                 train_dataset, val_dataset, test_dataset = self.dataset_class.create_datasets(
                     train_dataset_path=join(self.data_root, dataset.get('name')),
                     dataset_split=dataset.get('split'),
@@ -292,7 +289,7 @@ class Environment:
                     center_color_to_imagenet=self.center_color_to_imagenet,
                     simplify_classes=self.simplify_classes,
                     image_scale_mode=self.img_scale_mode,
-                    pre_image_scale=dataset.get('pre_image_scale', 0.5),
+                    pre_image_scale=dataset.get('pre_image_scale', 1.0),
                     split_by_filename_base=dataset.get('split_by_filename_base'),
                     max_examples_per_filename_base=dataset.get('max_examples_per_filename_base', 0),
                     k_fold_x_val=self.k_fold_x_val,
@@ -300,7 +297,7 @@ class Environment:
                     x_val_ignore_dataset=self.x_val_ignore_dataset
                 )
 
-                train_dataset.IMAGE_FACTOR = val_dataset.IMAGE_FACTOR = test_dataset.IMAGE_FACTOR = dataset.get('pre_image_scale', 0.5)
+                train_dataset.IMAGE_FACTOR = val_dataset.IMAGE_FACTOR = test_dataset.IMAGE_FACTOR = dataset.get('pre_image_scale', 1.0)
 
                 self.class_names = train_dataset.get_label_names()
 

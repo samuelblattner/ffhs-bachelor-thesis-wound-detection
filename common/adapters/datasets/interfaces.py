@@ -3,6 +3,7 @@ import re
 import sys
 from abc import ABCMeta, abstractmethod
 from os.path import join
+from random import random
 from typing import List, Tuple
 
 import cv2
@@ -72,7 +73,7 @@ class AbstractDataset:
     # =======
 
     def __init__(self, dataset_path: str, simplify_classes: bool = False, batch_size: int = 1, max_image_side_length: int = 1333,
-                 augmentation: Augmenter = None, center_color_to_imagenet: bool = False, image_scale_mode: str = 'square', pre_image_scale=0.5, min_image_side_length: int = 800,):
+                 augmentation: Augmenter = None, center_color_to_imagenet: bool = False, image_scale_mode: str = 'square', pre_image_scale=1.0, min_image_side_length: int = 800,):
         """
         Initialization of dataset generator.
 
@@ -114,8 +115,7 @@ class AbstractDataset:
         self.dataset_path = dataset_path
         self.__load_dataset(dataset_path)
 
-    @classmethod
-    def combine_x_y(cls, x_y: List[Tuple], num_items: int):
+    def combine_x_y(self, x_y: List[Tuple], num_items: int):
         raise NotImplementedError()
 
     def size(self):
@@ -428,12 +428,17 @@ class AbstractDataset:
         # Iterate over num batches
         for batch_item in indices:
 
+            r = random()
+
             # Load image, masks and labels
             image = self.load_image(batch_item)
             masks, labels = self.load_mask(batch_item, as_box=not use_masks)
 
             initial_shape = image.shape
             initial_width = image.shape[1]
+            initial_height = image.shape[0]
+
+            print('Image ', r, initial_shape)
             has_crop = False
 
             # Apply augmentations if specified
@@ -521,8 +526,6 @@ class AbstractDataset:
                     image, max_dim=self.max_image_side_length, min_dim=self.min_image_side_length, downscale=downscale
                 )
 
-                # print(w, p, c, scale)
-
                 if use_masks:
                     masks = resize_mask(
                         masks, scale=scale, padding=p
@@ -532,9 +535,20 @@ class AbstractDataset:
                     # print(masks)
                     masks = np.multiply(masks, scale)
 
-                    if p[0][0] > 0:
-                        masks[:, 1] += p[0][0]
-                        masks[:, 3] += p[0][0]
+                    if self.image_scale_mode == 'square':
+                        if p[0][0] > 0:
+                            masks[:, 1] += p[0][0]
+                            masks[:, 3] += p[0][0]
+                        if p[1][0] > 0:
+                            masks[:, 0] += p[1][0]
+                            masks[:, 2] += p[1][0]
+                    # if p[0][0] > 0:
+                    #     try:
+                    #         masks[:, 1] += p[0][0]
+                    #         masks[:, 3] += p[0][0]
+                    #     except BaseException:
+                    #         print('MAS FAL')
+                    #         print(masks.shape)
 
                     if has_crop:
                         masks[:, 0] += p[1][0]
@@ -550,11 +564,13 @@ class AbstractDataset:
                 #     masks = np.array(masks2)
             if autoscale and self.image_scale_mode == 'just':
                 new_width = int((initial_width * scale))
-                remove = int((image.shape[1] - new_width) / 2)
+                new_height = int((initial_height * scale))
+                remove_width = int((image.shape[1] - new_width) / 2)
+                remove_height = int((image.shape[0] - new_height) / 2)
 
-                image = image[:, remove:image.shape[1] - remove, :]
+                image = image[remove_height:image.shape[0] - remove_height, remove_width:image.shape[1] - remove_width, :]
                 if use_masks:
-                    masks = masks[:, remove:masks.shape[1] - remove, :]
+                    masks = masks[remove_height:image.shape[0] - remove_height, remove_width:masks.shape[1] - remove_width, :]
 
             if do_preprocessing:
                 if self.center_color_to_imagenet:

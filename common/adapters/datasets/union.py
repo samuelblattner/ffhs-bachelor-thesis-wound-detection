@@ -142,10 +142,10 @@ class UnionDataset(AbstractDataset, Generator):
 
         for dataset, data in index_datasets.items():
             x_y.append(
-                (data.get('dataset').get_x_y(data.get('local_indices')), data.get('batch_indices'))
+                (data.get('dataset').get_x_y(data.get('local_indices'), raw=True), data.get('batch_indices'))
             )
 
         self._cur_img_idx += len(group)
 
         self._batch_no += 1
-        return self.dataset_class.combine_x_y(x_y, len(group))
+        return self.datasets[0].combine_x_y(x_y, len(group))

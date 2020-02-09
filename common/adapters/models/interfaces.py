@@ -8,8 +8,7 @@ from typing import Tuple, List
 import numpy as np
 
 from tensorflow.python.keras import Model
-from tensorflow.python.keras.callbacks import Callback
-from keras.callbacks import EarlyStopping, ModelCheckpoint
+from keras.callbacks import EarlyStopping, ModelCheckpoint, Callback
 from keras.callbacks import TensorBoard
 
 from common.detection import Detection
@@ -118,10 +117,11 @@ class AbstractModelAdapter:
         if hasattr(f, 'close'):
             f.close()
 
-    def get_checkpoint_location(self) -> Tuple[str, str]:
+    def get_checkpoint_location(self) -> Tuple[str, str, str]:
         checkpoint_dir_path = join(self.env.checkpoint_root, self.full_name)
         checkpoint_path = join(checkpoint_dir_path, "{}_{{epoch:04d}}.h5".format(self.full_name))
-        return checkpoint_dir_path, checkpoint_path
+        checkpoint_latest_path = join(checkpoint_dir_path, "{}_latest.h5".format(self.full_name))
+        return checkpoint_dir_path, checkpoint_path, checkpoint_latest_path
 
     def load_latest_checkpoint(self):
 
@@ -146,7 +146,7 @@ class AbstractModelAdapter:
 
     def get_callbacks(self, loss_patience=15, val_loss_patience=30) -> List[Callback]:
 
-        checkpoint_dir_path, checkpoint_path = self.get_checkpoint_location()
+        checkpoint_dir_path, checkpoint_path, checkpoint_latest_path = self.get_checkpoint_location()
 
         return [
             TensorBoard(
@@ -154,14 +154,14 @@ class AbstractModelAdapter:
                 batch_size=self.env.batch_size,
                 write_images=True
             ),
-            # ModelCheckpoint(
-            #     filepath=checkpoint_path + '.train',
-            #     verbose=True,
-            #     save_best_only=True,
-            #     monitor='loss'
-            # ),
             ModelCheckpoint(
                 filepath=checkpoint_path,
+                verbose=True,
+                save_best_only=True,
+                monitor='val_loss',
+            ),
+            ModelCheckpoint(
+                filepath=checkpoint_latest_path,
                 verbose=True,
                 save_best_only=True,
                 monitor='val_loss',
@@ -209,8 +209,8 @@ class AbstractModelAdapter:
                 verbose=1,
                 validation_data=val_dataset,
                 validation_steps=np.ceil(val_dataset.size() / self.env.batch_size),
-                max_queue_size=10,
-                workers=4,
+                max_queue_size=1,
+                workers=1,
                 use_multiprocessing=False,
                 shuffle=False,
                 callbacks=self.get_callbacks(loss_patience, val_loss_patience)

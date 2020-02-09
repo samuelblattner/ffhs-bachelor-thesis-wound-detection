@@ -20,58 +20,48 @@ class RetinaDataset(AbstractDataset, Generator):
                  dataset_path: str,
                  simplify_classes: bool = False,
                  batch_size: int = 1,
-                 max_image_side_length: int = 512,
+                 max_image_side_length: int = None,
                  augmentation: Augmenter = None,
                  center_color_to_imagenet: bool = False,
-                 image_scale_mode: str = 'square',
+                 image_scale_mode: str = 'just',
                  pre_image_scale=0.5):
 
         super(RetinaDataset, self).__init__(dataset_path, simplify_classes, batch_size, max_image_side_length, augmentation, center_color_to_imagenet,
                                             image_scale_mode, pre_image_scale)
 
         self.center_color_to_imagenet = True
+        self.image_scale_mode = 'just'
 
         if max_image_side_length is None:
             self.max_image_side_length = 1333
             self.min_image_side_length = 800
 
     # ==================== BaseDataset Methods =========================
-    @classmethod
-    def combine_x_y(cls, x_y_list: List[Tuple], num_items: int):
+    def combine_x_y(self, x_y_list: List[Tuple], num_items: int):
 
         images = [None] * num_items
-        all_regressions = [None] * num_items
-        all_labels = [None] * num_items
+
+        all_images = None
+        all_annotations = None
 
         for x_y, batch_idx in x_y_list:
             image_batch, target_batch = x_y
-            regression_batch, label_batch = target_batch[0], target_batch[1]
-            for image, regressions, labels, idx in zip(image_batch, regression_batch, label_batch, batch_idx):
+            imgs, annos = target_batch[0], target_batch[1]
 
+            if all_images is None:
+                all_images = imgs
+            else:
+                all_images += imgs
+
+            if all_annotations is None:
+                all_annotations = annos
+            else:
+                all_annotations += annos
+
+            for image, idx in zip(image_batch, batch_idx):
                 images[idx] = image
-                all_regressions[idx] = regressions
-                all_labels[idx] = labels
 
-        return cls._compute_inputs(images, num_items), [all_regressions, all_labels]
-
-    @classmethod
-    def _compute_inputs(cls, image_group, num_items):
-        """ Compute inputs for the network using an image_group.
-        """
-        # get the max image shape
-        max_shape = tuple(max(image.shape[x] for image in image_group) for x in range(3))
-
-        # construct an image batch object
-        image_batch = np.zeros((num_items,) + max_shape, dtype=keras.backend.floatx())
-
-        # copy all images to the upper left part of the image batch object
-        for image_index, image in enumerate(image_group):
-            image_batch[image_index, :image.shape[0], :image.shape[1], :image.shape[2]] = image
-
-        if keras.backend.image_data_format() == 'channels_first':
-            image_batch = image_batch.transpose((0, 3, 1, 2))
-
-        return image_batch
+        return self.compute_inputs(images), self.compute_targets(all_images, all_annotations)
 
     def compile_dataset(self):
         self.group_method = 'ratio'
@@ -154,7 +144,7 @@ class RetinaDataset(AbstractDataset, Generator):
             'labels': np.asarray(labels)
         }
 
-    def get_x_y(self, indices: List[int]):
+    def get_x_y(self, indices: List[int], raw=False):
         """
         Create arrays for input and targets for Retina Net
 
@@ -179,6 +169,7 @@ class RetinaDataset(AbstractDataset, Generator):
         # Extract boxes
         for batch, sets in enumerate(zip(batch_of_input_images, batch_of_bbox_sets, batch_of_label_sets)):
             image, box_set, label_set = sets
+            print(image.shape)
             annotations.append({
                 'bboxes': box_set,
                 'labels': label_set
@@ -187,47 +178,47 @@ class RetinaDataset(AbstractDataset, Generator):
             # Uncomment for DEBUG
             # ==========================
             # ==========================
-            # draw = image.copy()
-            #
-            # draw[..., 0] += 123.68  # R
-            # draw[..., 1] += 116.779  # G
-            # draw[..., 2] += 103.939  # B
-            #
-            # for ann in annotations:
-            #
-            #     for box in ann.get('bboxes'):
-            #         draw_box(draw, [int(box[1]), int(box[0]), int(box[3]), int(box[2])], color=(255, 200, 0))
-            #         caption = "{} {:.3f}".format('hur', 0)
-            #
-            #         # print(self.labels.index(obj['name'])  )
-            #
-            #         cv2.putText(
-            #             img=draw,
-            #             text=caption,
-            #             org=(int(box[0]), int(box[1]) - 10),
-            #             fontFace=cv2.FONT_HERSHEY_PLAIN,
-            #             fontScale=1,
-            #             color=(255, 200, 0),
-            #             thickness=1)
-            #
-            # from matplotlib import pyplot as plt
-            # fig = plt.figure(figsize=(10,15))
-            # plt.axis('off')
-            # try:
-            #     plt.imshow(draw.astype(np.uint8))
-            # except:
-            #     pass
-            # plt.show()
-            # with open('train_images/{}.png'.format(randint(0, 1000)), 'wb') as f:
-            #     fig.savefig(f, format='png')
-            #
-            # exit(0)
+            draw = image.copy()
+
+            draw[..., 0] += 123.68  # R
+            draw[..., 1] += 116.779  # G
+            draw[..., 2] += 103.939  # B
+
+            for ann in annotations:
+
+                for box in ann.get('bboxes'):
+                    draw_box(draw, [int(box[1]), int(box[0]), int(box[3]), int(box[2])], color=(255, 200, 0))
+                    caption = "{} {:.3f}".format('hur', 0)
+
+                    # print(self.labels.index(obj['name'])  )
+
+                    cv2.putText(
+                        img=draw,
+                        text=caption,
+                        org=(int(box[0]), int(box[1]) - 10),
+                        fontFace=cv2.FONT_HERSHEY_PLAIN,
+                        fontScale=1,
+                        color=(255, 200, 0),
+                        thickness=1)
+
+            from matplotlib import pyplot as plt
+            fig = plt.figure(figsize=(10,15))
+            plt.axis('off')
+            try:
+                plt.imshow(draw.astype(np.uint8))
+            except:
+                pass
+            plt.show()
+            with open('train_images/{}.png'.format(randint(0, 1000)), 'wb') as f:
+                fig.savefig(f, format='png')
+
+            exit(0)
             # ==========================
             # ==========================
 
         # Compute regression targets
-        targets = self.compute_targets(batch_of_input_images, annotations)
-        batch_of_input_images = self.compute_inputs(batch_of_input_images)
+        targets = (batch_of_input_images, annotations) if raw else self.compute_targets(batch_of_input_images, annotations)
+        # batch_of_input_images = self.compute_inputs(batch_of_input_images)
         return batch_of_input_images, list(targets)
 
     def __getitem__(self, index):

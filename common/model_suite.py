@@ -188,12 +188,14 @@ class ModelSuite:
 
         base_name = self.env.name
 
-        for i, datasets in enumerate(self.env.iter_datasets()):
+        for ds, datasets in enumerate(self.env.iter_datasets()):
 
             train_dataset, val_dataset, test_dataset = datasets
 
+            self.env.name = base_name
+
             if self.env.auto_xval and self.env.x_val_auto_env_name:
-                self.env.name = re.sub(r'^(\d{4})', r'\1{}'.format('abcdefghijklmnopqrstuvwxyz'[i]), base_name)
+                self.env.name = re.sub(r'^(\d{4})', r'\1{}'.format('abcdefghijklmnopqrstuvwxyz'[ds]), base_name)
 
             self.model = self._create_adapter()
 
@@ -266,7 +268,7 @@ class ModelSuite:
                 # if self.env.eval_heatmaps:
 
                 # axs[i, 0].imshow(raw_image.astype(np.uint8))
-
+                name = re.sub(r'^(\d{4})', r'\1{}'.format('abcdefghijklmnopqrstuvwxyz'[ds]), self.model.full_name)
                 # plt.show()
                 # exit(0)
                 if self.env.eval_images:
@@ -274,7 +276,7 @@ class ModelSuite:
                     os.makedirs(full_path, exist_ok=True)
                     with open('{}/eval-{}{}{}-{}.png'.format(
                             full_path,
-                            self.model.full_name,
+                            name,
                             self.env.eval_name_suffix if self.env.eval_name_suffix else '',
                             '-fullsize' if self.env.full_size_eval else '',
                             i
@@ -286,7 +288,7 @@ class ModelSuite:
                     os.makedirs(full_path, exist_ok=True)
                     with open('{}/eval-{}{}{}-{}-heatmap.png'.format(
                             full_path,
-                            self.model.full_name,
+                            name,
                             self.env.eval_name_suffix if self.env.eval_name_suffix else '',
                             '-fullsize' if self.env.full_size_eval else '',
                             i
@@ -297,7 +299,7 @@ class ModelSuite:
             if self.env.eval_heatmaps_overview:
                 plt.show()
                 os.makedirs(full_path, exist_ok=True)
-                with open('{}/eval-{}{}{}.pdf'.format(full_path, self.model.full_name,
+                with open('{}/eval-{}{}{}.pdf'.format(full_path, name,
                                                       self.env.eval_name_suffix if self.env.eval_name_suffix else '',
                                                       '-fullsize' if self.env.full_size_eval else ''), 'wb') as f:
                     fig.savefig(f, format='pdf')
@@ -382,6 +384,30 @@ class ModelSuite:
                         'recall': recall[-1] if recall.shape[0] > 0 else 0.0,
                         'precision': precision[-1] if precision.shape[0] > 0 else 0.0
                     }
+
+                    precisions = []
+                    recalls = []
+
+                    for i, v in enumerate(zip(reversed(precision), reversed(recall))):
+                        prec, rec = v
+                        precisions.append(max(precisions[i-1], prec) if len(precisions) > 0 else prec)
+                        recalls.append(rec)
+
+                    precisions = list(reversed(precisions))
+                    recalls = list(reversed(recalls))
+
+                    plot_fig = plt.figure()
+                    # plt.xlim(left=0, right=1.0)
+                    # plt.ylim(bottom=0, top=1.0)
+                    plt.plot(recalls, precisions, drawstyle='steps-mid')
+                    # fig.show()
+                    name = re.sub(r'^(\d{4})', r'\1{}'.format('abcdefghijklmnopqrstuvwxyz'[ds]), self.model.full_name)
+
+                    with open('{}/eval-{}{}{}-{}-{}.pdf'.format(full_path, name,
+                                                          self.env.eval_name_suffix if self.env.eval_name_suffix else '',
+                                                          '-fullsize' if self.env.full_size_eval else '',
+                                                             'roc_iou_{}'.format(iou_threshold), label), 'wb') as f:
+                        plot_fig.savefig(f, format='pdf')
             print(out)
 
             csv = ''
@@ -403,6 +429,9 @@ class ModelSuite:
                     )
 
             os.makedirs(full_path, exist_ok=True)
+
+            if self.env.auto_xval:
+                self.env.name = re.sub(r'^(\d{4})', r'\1{}'.format('abcdefghijklmnopqrstuvwxyz'[ds]), base_name)
 
             with open('{}/eval-{}{}{}.csv'.format(full_path, self.model.full_name,
                                                   self.env.eval_name_suffix if self.env.eval_name_suffix else '',

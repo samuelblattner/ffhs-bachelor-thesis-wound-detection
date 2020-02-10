@@ -8,11 +8,14 @@ from matplotlib import pyplot as plt
 
 
 DATA_PATH = 'data/vanilla_datasets/'
+DATA_PATH = '/home/blsa/projects/confidential/wound-detection/data/'
 
 DATASETS = (
     ('Puppet', 'puppet_measure_bands'),
     ('Full Body Shots', 'body_shots'),
     ('Close Up Wounds', 'closeup_wounds'),
+    ('Close Up Wounds Cases', 'closeup_wounds_confidential'),
+    ('Cases', 'cases-multishots'),
 )
 
 CLASS_CLUSTERS = {
@@ -26,9 +29,9 @@ CLASS_CLUSTERS = {
 
 if __name__ == '__main__':
 
-    show_distributions_grid([
-        Add(Absolute(Normal(0.0, 3.0)), 1)
-    ],graph_sizes=(2048, 2048))
+    # show_distributions_grid([
+    #     Add(Absolute(Normal(0.0, 3.0)), 1)
+    # ],graph_sizes=(2048, 2048))
 
     index = pd.MultiIndex.from_tuples(
         (
@@ -211,7 +214,8 @@ if __name__ == '__main__':
 
             fig = plt.figure(figsize=(7, 7))
             # plt.boxplot([widths[2], heights[2]], labels=('Widths', 'Heights'), widths=(0.5,0.5), )
-            plt.hist([widths[2], heights[2]], bins=30)
+            # plt.hist([widths[2], heights[2]], bins=30)
+            plt.scatter(widths[2], heights[2])
             plt.legend(('widths', 'heights'))
             plt.xlabel('pixels')
             plt.ylabel('n boxes')

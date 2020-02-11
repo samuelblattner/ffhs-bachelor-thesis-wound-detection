@@ -1,0 +1,27 @@
+#!/bin/bash
+
+python main.py --purpose train    --env 1032-joint-puppet-close-up-wounds-strong-imgaug                                       --gpu_no 1 --batch_size=2 --net_type retina-resnet152 --data_dir=/home/blsa/projects/confidential/wound-detection/data/ --checkpoint_dir=/checkpoints/ --eval_dir=/home/blsa/projects/confidential/wound-detection/evaluation/ > train-1032-retina152.log 2>&1
+python main.py --purpose evaluate --env 1032-joint-puppet-close-up-wounds-strong-imgaug                                       --gpu_no 1 --net_type retina-resnet152 --data_dir=/home/blsa/projects/confidential/wound-detection/data/ --checkpoint_dir=/checkpoints/ --eval_dir=/home/blsa/projects/confidential/wound-detection/evaluation/                                     --eval_images --eval_heatmaps
+python main.py --purpose evaluate --env 1032-joint-puppet-close-up-wounds-strong-imgaug-body-shots-eval                       --gpu_no 1 --net_type retina-resnet152 --data_dir=/home/blsa/projects/confidential/wound-detection/data/ --checkpoint_dir=/checkpoints/ --eval_dir=/home/blsa/projects/confidential/wound-detection/evaluation/ --eval_name_suffix=-body-shots-eval --eval_images --eval_heatmaps
+python main.py --purpose evaluate --env 1032-joint-puppet-close-up-wounds-strong-imgaug-cases-eval                            --gpu_no 1 --net_type retina-resnet152 --data_dir=/home/blsa/projects/confidential/wound-detection/data/ --checkpoint_dir=/checkpoints/ --eval_dir=/home/blsa/projects/confidential/wound-detection/evaluation/ --eval_name_suffix=-cases-eval      --eval_images --eval_heatmaps
+
+mkdir -p /checkpoints/1033a_Joint_Puppet_Closeup_Wounds_Strong_Imgaug_Fine_Tuning--RetinaNet-Resnet152
+cp /checkpoints/1032a_Joint_Puppet_Closeup_Wounds_Strong_Imgaug--RetinaNet-Resnet152/*latest.h5 /checkpoints/1033a_Joint_Puppet_Closeup_Wounds_Strong_Imgaug_Fine_Tuning--RetinaNet-Resnet152
+mv /checkpoints/1033a_Joint_Puppet_Closeup_Wounds_Strong_Imgaug_Fine_Tuning--RetinaNet-Resnet152/*latest.h5 /checkpoints/1033a_Joint_Puppet_Closeup_Wounds_Strong_Imgaug_Fine_Tuning--RetinaNet-Resnet152/1033a_Joint_Puppet_Closeup_Wounds_Strong_Imgaug_Fine_Tuning--RetinaNet-Resnet152_0001.h5
+
+mkdir -p /checkpoints/1033b_Joint_Puppet_Closeup_Wounds_Strong_Imgaug_Fine_Tuning--RetinaNet-Resnet152
+cp /checkpoints/1032_Joint_Puppet_Closeup_Wounds_Strong_Imgaug--RetinaNet-Resnet152/*latest.h5 /checkpoints/1033b_Joint_Puppet_Closeup_Wounds_Strong_Imgaug_Fine_Tuning--RetinaNet-Resnet152
+mv /checkpoints/1033b_Joint_Puppet_Closeup_Wounds_Strong_Imgaug_Fine_Tuning--RetinaNet-Resnet152/*latest.h5 /checkpoints/1033b_Joint_Puppet_Closeup_Wounds_Strong_Imgaug_Fine_Tuning--RetinaNet-Resnet152/1033b_Joint_Puppet_Closeup_Wounds_Strong_Imgaug_Fine_Tuning--RetinaNet-Resnet152_0001.h5
+
+mkdir -p /checkpoints/1033c_Joint_Puppet_Closeup_Wounds_Strong_Imgaug_Fine_Tuning--RetinaNet-Resnet152
+cp /checkpoints/1032c_Joint_Puppet_Closeup_Wounds_Strong_Imgaug--RetinaNet-Resnet152/*latest.h5 /checkpoints/1033c_Joint_Puppet_Closeup_Wounds_Strong_Imgaug_Fine_Tuning--RetinaNet-Resnet152
+mv /checkpoints/1033c_Joint_Puppet_Closeup_Wounds_Strong_Imgaug_Fine_Tuning--RetinaNet-Resnet152/*latest.h5 /checkpoints/1033c_Joint_Puppet_Closeup_Wounds_Strong_Imgaug_Fine_Tuning--RetinaNet-Resnet152/1033c_Joint_Puppet_Closeup_Wounds_Strong_Imgaug_Fine_Tuning--RetinaNet-Resnet152_0001.h5
+
+mkdir -p /checkpoints/1033d_Joint_Puppet_Closeup_Wounds_Strong_Imgaug_Fine_Tuning--RetinaNet-Resnet152
+cp /checkpoints/1032d_Joint_Puppet_Closeup_Wounds_Strong_Imgaug--RetinaNet-Resnet152/*latest.h5 /checkpoints/1033d_Joint_Puppet_Closeup_Wounds_Strong_Imgaug_Fine_Tuning--RetinaNet-Resnet152
+mv /checkpoints/1033d_Joint_Puppet_Closeup_Wounds_Strong_Imgaug_Fine_Tuning--RetinaNet-Resnet152/*latest.h5 /checkpoints/1033d_Joint_Puppet_Closeup_Wounds_Strong_Imgaug_Fine_Tuning--RetinaNet-Resnet152/1033d_Joint_Puppet_Closeup_Wounds_Strong_Imgaug_Fine_Tuning--RetinaNet-Resnet152_0001.h5
+
+python main.py --purpose train    --env 1033-joint-puppet-close-up-wounds-strong-imgaug-fine-tuning                           --gpu_no 1 --batch_size=2  --net_type retina-resnet152 --data_dir=/home/samuelblattner/projects/ffhs-bachelor-thesis-wound-detection/data/vanilla_datasets --checkpoint_dir=/checkpoints --eval_dir=/checkpoints/evaluation > train-1033-retina152.log 2>&1
+python main.py --purpose evaluate --env 1033-joint-puppet-close-up-wounds-strong-imgaug-fine-tuning                           --gpu_no 1 --net_type retina-resnet152 --data_dir=/home/samuelblattner/projects/ffhs-bachelor-thesis-wound-detection/data/vanilla_datasets --checkpoint_dir=/checkpoints --eval_dir=/checkpoints/evaluation                                     --eval_images --eval_heatmaps
+python main.py --purpose evaluate --env 1033-joint-puppet-close-up-wounds-strong-imgaug-fine-tuning-body-shots-eval           --gpu_no 1 --net_type retina-resnet152 --data_dir=/home/samuelblattner/projects/ffhs-bachelor-thesis-wound-detection/data/vanilla_datasets --checkpoint_dir=/checkpoints --eval_dir=/checkpoints/evaluation   --eval_name_suffix=-body-shots-eval                                   --eval_images --eval_heatmaps
+python main.py --purpose evaluate --env 1033-joint-puppet-close-up-wounds-strong-imgaug-fine-tuning-cases-eval                --gpu_no 1 --net_type retina-resnet152 --data_dir=/home/samuelblattner/projects/ffhs-bachelor-thesis-wound-detection/data/vanilla_datasets --checkpoint_dir=/checkpoints --eval_dir=/checkpoints/evaluation                                     --eval_images --eval_heatmaps

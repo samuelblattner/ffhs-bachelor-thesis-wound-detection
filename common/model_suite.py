@@ -35,6 +35,8 @@ class ModelSuite:
     #: Environment to be used around the model
     env: Environment = None
 
+    start_from_xval_k: int = None
+
     def __init__(self):
         """
         Initialize the suite.
@@ -93,6 +95,7 @@ class ModelSuite:
         parser.add_argument('--full_size_eval', help='Full Size Eval', default=False, type=bool, required=False)
         parser.add_argument('--gpu_no', help='GPU no', default=0, type=int, required=False)
         parser.add_argument('--batch_size', help='Batch Size', default=None, type=int, required=False)
+        parser.add_argument('--start_from_xval_k', help='Start from xval k', default=None, type=int, required=False)
 
         return parser.parse_args(sys.argv[1:])
 
@@ -101,6 +104,8 @@ class ModelSuite:
         Creates an environment and inflates it with additional parameters
         from the command line.
         """
+
+        self.start_from_xval_k = args.start_from_xval_k
 
         # Load base arguments from json
         env = Environment.from_json(join(ENVIRONMENT_ROOT, '{}.json'.format(args.env)))
@@ -147,7 +152,7 @@ class ModelSuite:
 
     def _train(self):
         print('Use Transfer Learning: ', self.env.use_transfer_learning)
-        self.model.train()
+        self.model.train(start_from_xval_k=self.start_from_xval_k)
 
     def _predict(self):
 

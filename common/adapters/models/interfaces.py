@@ -182,7 +182,7 @@ class AbstractModelAdapter:
             )
         ]
 
-    def train(self, loss_patience=15, val_loss_patience=30):
+    def train(self, loss_patience=15, val_loss_patience=30, start_from_xval_k: int = None):
         """
         Train the network
         :return:
@@ -191,6 +191,9 @@ class AbstractModelAdapter:
         base_env_name = self.env.name
 
         for i, datasets in enumerate(self.env.iter_datasets()):
+
+            if start_from_xval_k is not None and i < start_from_xval_k:
+                continue
 
             if self.env.auto_xval:
 
@@ -214,9 +217,9 @@ class AbstractModelAdapter:
                 verbose=1,
                 validation_data=val_dataset,
                 validation_steps=np.ceil(val_dataset.size() / self.env.batch_size),
-                max_queue_size=4,
-                workers=2,
-                use_multiprocessing=False,
+                max_queue_size=10,
+                workers=8,
+                use_multiprocessing=True,
                 shuffle=False,
                 callbacks=self.get_callbacks(loss_patience, val_loss_patience)
             )

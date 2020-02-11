@@ -23,16 +23,14 @@ TABLES = (
             ('RetinaNet 152', 'evaluation/final/eval-1001_Default_Nets--RetinaNet-Resnet152-body-shots-eval.csv'),
         )
     },
-
-    # TODO: evaluate yolo3 and frcnn
     # {
-    #     'label': '1001-all-cases',
+    #     'label': '1001-all-cases-retina-50',
     #     'caption': 'Training on Puppet Dataset (default network configurations, no image augmentation), test on All Cases Dataset (env: 1001)',
     #     'tables': (
-    #       ('Yolo 3', 'evaluation/final/eval-1001_Default_Nets--Yolo3-all-cases-eval.csv'),
-    #       ('F-RCNN', 'evaluation/final/eval-1001_Default_Nets--FRCNN-all-cases-eval.csv'),
-    #       ('RetinaNet 50', 'evaluation/final/eval-1001_Default_Nets--RetinaNet-Resnet50-all-cases-eval.csv'),
-    #       ('RetinaNet 152', 'evaluation/final/eval-1001_Default_Nets--RetinaNet-Resnet152-all-cases-eval.csv'),
+    #       ('RetinaNet 50', 'evaluation/final/eval-1001a_Default_Nets--RetinaNet-Resnet50-all-cases-eval.csv'),
+    #       ('RetinaNet 50', 'evaluation/final/eval-1001b_Default_Nets--RetinaNet-Resnet50-all-cases-eval.csv'),
+    #       ('RetinaNet 50', 'evaluation/final/eval-1001c_Default_Nets--RetinaNet-Resnet50-all-cases-eval.csv'),
+    #       ('RetinaNet 50', 'evaluation/final/eval-1001d_Default_Nets--RetinaNet-Resnet50-all-cases-eval.csv'),
     #     )
     # },
 

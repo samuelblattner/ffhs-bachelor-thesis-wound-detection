@@ -1,6 +1,6 @@
 {
-  "name": "1030 Joint Puppet Closeup Wounds",
-  "description": "Default Network Configurations, Puppet and Close up wounds joint training",
+  "name": "1032 Joint Puppet Closeup Wounds Strong Imgaug",
+  "description": "Default Network Configurations, Puppet and Close up wounds joint training, Strong Image Augmentation",
   "batch_size": 5,
   "max_epochs": 1000,
   "shuffle_dataset": true,
@@ -13,10 +13,11 @@
   "x_val_ignore_dataset": true,
   "datasets": [
     {
-      "name": "cases-multishots",
+      "name": "body_shots",
+      "pre_image_scale": 1.0,
       "split": [
-        0,
-        0,
+        0.0,
+        0.0,
         1.0
       ]
     }

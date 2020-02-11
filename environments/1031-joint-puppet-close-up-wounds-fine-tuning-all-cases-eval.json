@@ -10,15 +10,14 @@
   "allow_base_layer_training": true,
   "k_fold_x_val": 4,
   "x_val_k": "auto",
+  "x_val_ignore_dataset": true,
   "datasets": [
     {
       "name": "cases-multishots",
-      "split_by_filename_base": true,
-      "max_examples_per_filename_base": 1,
       "split": [
-        0.67,
-        0.165,
-        0.165
+        0,
+        0,
+        1.0
       ]
     }
   ]

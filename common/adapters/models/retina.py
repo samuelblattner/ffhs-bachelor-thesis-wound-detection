@@ -165,12 +165,14 @@ class BaseRetinaAdapter(AbstractModelAdapter):
         box_output = self.inference_model.output[0][:, 0]
 
         layer_names = (
-            'bn5c_branch2c',
+            'fc1000',
+            # 'bn5c_branch2c',
             # 'bn4b35_branchs2c',
             # 'bn4b22_branch2c',
             # 'bn3b7_branch2c',
             # 'bn2c_branch2c',
         )
+        #https://github.com/raghakot/keras-vis/blob/master/examples/resnet/attention.ipynb
 
         try:
             layers = [self.inference_model.get_layer(layer) for layer in layer_names]

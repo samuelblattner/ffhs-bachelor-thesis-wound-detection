@@ -1,6 +1,6 @@
 {
-  "name": "1002 Transfer Learning",
-  "description": "Default Network Configurations using Transfer Learning",
+  "name": "1032 Joint Puppet Closeup Wounds Strong Imgaug",
+  "description": "Default Network Configurations, Puppet and Close up wounds joint training, Strong Image Augmentation",
   "batch_size": 5,
   "max_epochs": 1000,
   "shuffle_dataset": true,
@@ -8,6 +8,9 @@
   "simplify_classes": true,
   "use_transfer_learning": true,
   "allow_base_layer_training": false,
+  "k_fold_x_val": 4,
+  "x_val_k": "auto",
+  "x_val_ignore_dataset": true,
   "datasets": [
     {
       "name": "cases-multishots",

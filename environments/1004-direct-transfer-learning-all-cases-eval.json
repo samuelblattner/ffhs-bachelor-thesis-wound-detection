@@ -10,13 +10,12 @@
   "allow_base_layer_training": true,
   "datasets": [
     {
-      "name": "cases",
+      "name": "cases-multishots",
       "split": [
-        0.0,
-        0.0,
+        0,
+        0,
         1.0
-      ],
-      "split_by_filename_base": true
+      ]
     }
   ]
 }

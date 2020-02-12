@@ -216,6 +216,7 @@ class ModelSuite:
 
             # self.model.train_model[0].summary()
             # self.model.train_model[1].summary()
+            os.makedirs(full_path, exist_ok=True)
 
             if self.env.eval_heatmaps_overview:
                 fig, axs = plt.subplots(len(test_dataset.get_image_info()), 2, figsize=(10, 60))
@@ -278,7 +279,6 @@ class ModelSuite:
                 # exit(0)
                 if self.env.eval_images:
                     # plt.show()
-                    os.makedirs(full_path, exist_ok=True)
                     with open('{}/eval-{}{}{}-{}.png'.format(
                             full_path,
                             name,
@@ -290,7 +290,6 @@ class ModelSuite:
 
                 if self.env.eval_heatmaps:
                     # plt.show()
-                    os.makedirs(full_path, exist_ok=True)
                     with open('{}/eval-{}{}{}-{}-heatmap.png'.format(
                             full_path,
                             name,
@@ -303,7 +302,6 @@ class ModelSuite:
 
             if self.env.eval_heatmaps_overview:
                 plt.show()
-                os.makedirs(full_path, exist_ok=True)
                 with open('{}/eval-{}{}{}.pdf'.format(full_path, name,
                                                       self.env.eval_name_suffix if self.env.eval_name_suffix else '',
                                                       '-fullsize' if self.env.full_size_eval else ''), 'wb') as f:

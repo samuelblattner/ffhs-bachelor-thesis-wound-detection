@@ -12,6 +12,10 @@ from common.environment import Environment
 from neural_nets.retina_net.keras_retinanet import models, losses
 from neural_nets.retina_net.keras_retinanet.bin.train import create_models
 import keras.backend as K
+from vis.utils import utils
+from keras import activations
+
+from vis.visualization import visualize_saliency, overlay
 
 
 # def recall_m(y_true, y_pred):
@@ -165,13 +169,27 @@ class BaseRetinaAdapter(AbstractModelAdapter):
         box_output = self.inference_model.output[0][:, 0]
 
         layer_names = (
-            'fc1000',
-            # 'bn5c_branch2c',
+            #'fc1000',
+            'bn5c_branch2c',
             # 'bn4b35_branchs2c',
             # 'bn4b22_branch2c',
             # 'bn3b7_branch2c',
             # 'bn2c_branch2c',
         )
+        model = self.inference_model
+        layer_idx = utils.find_layer_idx(model, 'bn5c_branch2c')
+        model.layers[layer_idx].activation = activations.linear
+        model = utils.apply_modifications(model)
+
+        from matplotlib import pyplot as plt
+        f, ax = plt.subplots(1, 2)
+
+        # 20 is the imagenet index corresponding to `ouzel`
+        grads = visualize_saliency(model, layer_idx, filter_indices=20, seed_input=raw_image)
+
+        # visualize grads as heatmap
+        ax[0].imshow(grads, cmap='jet')
+
         #https://github.com/raghakot/keras-vis/blob/master/examples/resnet/attention.ipynb
 
         try:

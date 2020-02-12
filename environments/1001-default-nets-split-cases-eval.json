@@ -1,0 +1,19 @@
+{
+  "name": "1001 Default Nets",
+  "description": "Default Network Configurations, Evaluation on Cases Dataset",
+  "batch_size": 5,
+  "max_epochs": 1000,
+  "shuffle_dataset": true,
+  "shuffle_seed": 0,
+  "simplify_classes": true,
+  "datasets": [
+    {
+      "name": "cases-multishots",
+      "split": [
+        0,
+        0,
+        1.0
+      ]
+    }
+  ]
+}

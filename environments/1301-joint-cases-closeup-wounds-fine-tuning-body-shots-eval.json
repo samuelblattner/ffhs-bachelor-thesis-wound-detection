@@ -1,5 +1,5 @@
 {
-  "name": "1300 Joint Cases Closeup Wounds",
+  "name": "1301 Joint Cases Closeup Wounds",
   "description": "Joint training on Cases and Closeup Wounds Confidential Dataset using Transfer Learning (frozen Backbone) and Image Augmentation",
   "batch_size": 5,
   "max_epochs": 1000,

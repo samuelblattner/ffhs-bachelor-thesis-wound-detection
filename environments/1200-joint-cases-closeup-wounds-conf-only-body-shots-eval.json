@@ -10,158 +10,16 @@
   "allow_base_layer_training": false,
   "k_fold_x_val": 4,
   "x_val_k": "auto",
+  "x_val_ignore_dataset": true,
   "datasets": [
     {
-      "name": "cases-multishots",
-      "split_by_filename_base": true,
-      "max_examples_per_filename_base": 6,
+      "name": "body_shots",
+      "pre_image_scale": 1.0,
       "split": [
-        0.67,
-        0.165,
-        0.165
-      ],
-      "augmentation": {
-        "type": "sequential",
-        "params": {
-          "children": [
-            {
-              "type": "fliplr",
-              "params": {
-                "p": 0.1
-              }
-            },
-            {
-              "type": "affine",
-              "params": {
-                "scale": {
-                  "x": "(0.8, 1.2)",
-                  "y": "(0.8, 1.2)"
-                },
-                "translate_percent": {
-                  "x": "(-0.3, 0.3)",
-                  "y": "(-0.3, 0.3)"
-                },
-                "rotate": "[0.0, 90.0, 270.0]"
-              }
-            },
-            {
-              "type": "sometimes",
-              "params": {
-                "p": 0.1
-              },
-              "children": [
-                {
-                  "type": "DefocusBlur",
-                  "params": {
-                    "severity": 1
-                  }
-                }
-              ]
-            },
-            {
-              "type": "LogContrast",
-              "params": {
-                "gain": "(0.9, 1.1)"
-              }
-            },
-            {
-              "type": "MultiplySaturation",
-              "params": {
-                "mul": "(0.9, 1.1)"
-              }
-            },
-            {
-              "type": "ChangeColorTemperature",
-              "params": {
-                "kelvin": "(6000, 7000)"
-              }
-            },
-            {
-              "type": "Cutout",
-              "params": {
-                "size": "(0.01, 0.05)",
-                "nb_iterations": "(2, 10)",
-                "fill_mode": "gaussian"
-              }
-            }
-          ]
-        }
-      }
-    },
-    {
-      "name": "closeup_wounds_confidential",
-      "split": [
-        0.67,
-        0.165,
-        0.165
-      ],
-      "augmentation": {
-        "type": "sequential",
-        "params": {
-          "children": [
-            {
-              "type": "fliplr",
-              "params": {
-                "p": 0.1
-              }
-            },
-            {
-              "type": "affine",
-              "params": {
-                "scale": {
-                  "x": "(0.8, 1.2)",
-                  "y": "(0.8, 1.2)"
-                },
-                "translate_percent": {
-                  "x": "(-0.3, 0.3)",
-                  "y": "(-0.3, 0.3)"
-                },
-                "rotate": "[0.0, 90.0, 270.0]"
-              }
-            },
-            {
-              "type": "sometimes",
-              "params": {
-                "p": 0.1
-              },
-              "children": [
-                {
-                  "type": "DefocusBlur",
-                  "params": {
-                    "severity": 1
-                  }
-                }
-              ]
-            },
-            {
-              "type": "LogContrast",
-              "params": {
-                "gain": "(0.9, 1.1)"
-              }
-            },
-            {
-              "type": "MultiplySaturation",
-              "params": {
-                "mul": "(0.9, 1.1)"
-              }
-            },
-            {
-              "type": "ChangeColorTemperature",
-              "params": {
-                "kelvin": "(6000, 7000)"
-              }
-            },
-            {
-              "type": "Cutout",
-              "params": {
-                "size": "(0.01, 0.05)",
-                "nb_iterations": "(2, 10)",
-                "fill_mode": "gaussian"
-              }
-            }
-          ]
-        }
-      }
+        0.0,
+        0.0,
+        1.0
+      ]
     }
   ]
 }

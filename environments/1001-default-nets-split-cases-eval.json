@@ -9,10 +9,11 @@
   "datasets": [
     {
       "name": "cases-multishots",
+      "pre_image_scale": 0.2314814815,
       "split": [
-        0,
-        0,
-        1.0
+        0.67,
+        0.165,
+        0.165
       ]
     }
   ]

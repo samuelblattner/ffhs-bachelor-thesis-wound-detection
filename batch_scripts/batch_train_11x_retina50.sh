@@ -35,7 +35,7 @@ git add evaluation/final/* && git commit -m "Add 1301 evals RetinaNet 50" && git
 
 # 1200, 1201
 # ==========
-python main.py --purpose train --batch_size=2    --env 1200-joint-cases-closeup-wounds-conf-only                     --gpu_no 2 --net_type retina-resnet50 --data_dir=/home/blsa/projects/confidential/wound-detection/data/ --checkpoint_dir=/home/blsa/projects/confidential/wound-detection/checkpoints/ --eval_dir=/home/blsa/projects/confidential/wound-detection/evaluation/  > train_1200_retina50.log 2>&1
+python main.py --purpose train --batch_size=2    --env 1200-joint-cases-closeup-wounds-conf-only --start_from_xval_k=1                    --gpu_no 2 --net_type retina-resnet50 --data_dir=/home/blsa/projects/confidential/wound-detection/data/ --checkpoint_dir=/home/blsa/projects/confidential/wound-detection/checkpoints/ --eval_dir=/home/blsa/projects/confidential/wound-detection/evaluation/  > train_1200_retina50.log 2>&1
 python main.py --purpose evaluate --env 1200-joint-cases-closeup-wounds-conf-only                                    --gpu_no 2 --net_type retina-resnet50 --data_dir=/home/blsa/projects/confidential/wound-detection/data/ --checkpoint_dir=/home/blsa/projects/confidential/wound-detection/checkpoints/ --eval_dir=/home/blsa/projects/confidential/wound-detection/evaluation/
 python main.py --purpose evaluate --env 1200-joint-cases-closeup-wounds-conf-only-body-shots-eval                    --gpu_no 2 --net_type retina-resnet50 --data_dir=/home/blsa/projects/confidential/wound-detection/data/ --checkpoint_dir=/home/blsa/projects/confidential/wound-detection/checkpoints/ --eval_dir=/home/blsa/projects/confidential/wound-detection/evaluation/ --eval_name_suffix=-body-shots-eval
 
@@ -142,7 +142,7 @@ git add evaluation/final/* && git commit -m "Add 1111 evals RetinaNet 50" && git
 
 # 1100, 1101
 # ==========
-python main.py --purpose train    --env 1100-cases    --start_from_xval_k=3                       --gpu_no 2 --batch_size=2 --net_type retina-resnet50 --data_dir=/home/blsa/projects/confidential/wound-detection/data/ --checkpoint_dir=/home/blsa/projects/confidential/wound-detection/checkpoints/ --eval_dir=/home/blsa/projects/confidential/wound-detection/evaluation/ > train_1100_retina50.log 2>&1
+python main.py --purpose train    --env 1100-cases                                                --gpu_no 2 --batch_size=2 --net_type retina-resnet50 --data_dir=/home/blsa/projects/confidential/wound-detection/data/ --checkpoint_dir=/home/blsa/projects/confidential/wound-detection/checkpoints/ --eval_dir=/home/blsa/projects/confidential/wound-detection/evaluation/ > train_1100_retina50.log 2>&1
 python main.py --purpose evaluate --env 1100-cases                                                --gpu_no 2 --net_type retina-resnet50 --data_dir=/home/blsa/projects/confidential/wound-detection/data/ --checkpoint_dir=/home/blsa/projects/confidential/wound-detection/checkpoints/ --eval_dir=/home/blsa/projects/confidential/wound-detection/evaluation/
 python main.py --purpose evaluate --env 1100-cases-body-shots-eval                                --gpu_no 2 --net_type retina-resnet50 --data_dir=/home/blsa/projects/confidential/wound-detection/data/ --checkpoint_dir=/home/blsa/projects/confidential/wound-detection/checkpoints/ --eval_dir=/home/blsa/projects/confidential/wound-detection/evaluation/ --eval_name_suffix=-body-shots-eval
 

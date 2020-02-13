@@ -144,13 +144,13 @@ git add evaluation/final/* && git commit -m "Add 1111 evals RetinaNet 152" && gi
 
 # 1100, 1101
 # ==========
-#python main.py --purpose train    --env 1100-cases    --start_from_xval_k=3                       --gpu_no 3 --batch_size=1 --net_type retina-resnet152 --data_dir=/home/blsa/projects/confidential/wound-detection/data/ --checkpoint_dir=/home/blsa/projects/confidential/wound-detection/checkpoints/ --eval_dir=/home/blsa/projects/confidential/wound-detection/evaluation/ > train_1100_retina152.log 2>&1
-#python main.py --purpose evaluate --env 1100-cases                                                --gpu_no 3 --net_type retina-resnet152 --data_dir=/home/blsa/projects/confidential/wound-detection/data/ --checkpoint_dir=/home/blsa/projects/confidential/wound-detection/checkpoints/ --eval_dir=/home/blsa/projects/confidential/wound-detection/evaluation/
-#python main.py --purpose evaluate --env 1100-cases-body-shots-eval                                --gpu_no 3 --net_type retina-resnet152 --data_dir=/home/blsa/projects/confidential/wound-detection/data/ --checkpoint_dir=/home/blsa/projects/confidential/wound-detection/checkpoints/ --eval_dir=/home/blsa/projects/confidential/wound-detection/evaluation/ --eval_name_suffix=-body-shots-eval
-#
-#find /home/blsa/projects/confidential/wound-detection/evaluation -type f -name '*.csv' -exec cp {} /home/blsa/projects/ffhs-bachelor-thesis-wound-detection/evaluation/final/ \;
-#find /home/blsa/projects/confidential/wound-detection/evaluation -type f -name '*.pdf' -exec cp {} /home/blsa/projects/ffhs-bachelor-thesis-wound-detection/evaluation/final/roc-curves \;
-#git add evaluation/final/* && git commit -m "Add 1100 evals RetinaNet 152" && git push
+python main.py --purpose train    --env 1100-cases                       --gpu_no 3 --batch_size=1 --net_type retina-resnet152 --data_dir=/home/blsa/projects/confidential/wound-detection/data/ --checkpoint_dir=/home/blsa/projects/confidential/wound-detection/checkpoints/ --eval_dir=/home/blsa/projects/confidential/wound-detection/evaluation/ > train_1100_retina152.log 2>&1
+python main.py --purpose evaluate --env 1100-cases                                                --gpu_no 3 --net_type retina-resnet152 --data_dir=/home/blsa/projects/confidential/wound-detection/data/ --checkpoint_dir=/home/blsa/projects/confidential/wound-detection/checkpoints/ --eval_dir=/home/blsa/projects/confidential/wound-detection/evaluation/
+python main.py --purpose evaluate --env 1100-cases-body-shots-eval                                --gpu_no 3 --net_type retina-resnet152 --data_dir=/home/blsa/projects/confidential/wound-detection/data/ --checkpoint_dir=/home/blsa/projects/confidential/wound-detection/checkpoints/ --eval_dir=/home/blsa/projects/confidential/wound-detection/evaluation/ --eval_name_suffix=-body-shots-eval
+
+find /home/blsa/projects/confidential/wound-detection/evaluation -type f -name '*.csv' -exec cp {} /home/blsa/projects/ffhs-bachelor-thesis-wound-detection/evaluation/final/ \;
+find /home/blsa/projects/confidential/wound-detection/evaluation -type f -name '*.pdf' -exec cp {} /home/blsa/projects/ffhs-bachelor-thesis-wound-detection/evaluation/final/roc-curves \;
+git add evaluation/final/* && git commit -m "Add 1100 evals RetinaNet 152" && git push
 
 
 

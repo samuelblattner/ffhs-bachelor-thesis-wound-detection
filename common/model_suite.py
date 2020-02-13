@@ -1,27 +1,21 @@
 import argparse
 import os
+import re
 import sys
-from typing import List
-
 from os.path import join
 
 import cv2
 import numpy as np
-import re
 from PIL import Image
-
-from common.detection import Detection
-from neural_nets.retina_net.keras_retinanet.utils.visualization import draw_box
+from matplotlib import pyplot as plt
 from neural_nets.retina_net.keras_retinanet.utils.compute_overlap import compute_overlap
-
 from neural_nets.retina_net.keras_retinanet.utils.eval import _compute_ap
+from neural_nets.retina_net.keras_retinanet.utils.visualization import draw_box
 
 from common.adapters.models.interfaces import AbstractModelAdapter
-
 from common.enums import ModelPurposeEnum
 from common.environment import Environment
 from config import ENVIRONMENT_ROOT, NET_MAP, DATASET_CLASS_MAP, FACTORY_MAP
-from matplotlib import pyplot as plt
 
 
 class ModelSuite:

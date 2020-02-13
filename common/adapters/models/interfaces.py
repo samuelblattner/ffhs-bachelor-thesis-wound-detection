@@ -218,8 +218,8 @@ class AbstractModelAdapter:
                 validation_data=val_dataset,
                 validation_steps=np.ceil(val_dataset.size() / self.env.batch_size),
                 max_queue_size=10,
-                workers=4,
-                use_multiprocessing=True,
+                workers=8,
+                use_multiprocessing=False,
                 shuffle=False,
                 callbacks=self.get_callbacks(loss_patience, val_loss_patience)
             )

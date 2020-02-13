@@ -14,7 +14,6 @@
     {
       "name": "cases-multishots",
       "split_by_filename_base": true,
-      "pre_image_scale": 0.5,
       "max_examples_per_filename_base": 6,
       "split": [
         0.67,

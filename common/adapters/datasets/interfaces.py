@@ -4,6 +4,7 @@ import sys
 from abc import ABCMeta, abstractmethod
 from os.path import join
 from random import random
+from time import time
 from typing import List, Tuple
 
 import cv2
@@ -433,11 +434,17 @@ class AbstractDataset:
 
             # Load image, masks and labels
             image = self.load_image(batch_item)
+
             masks, labels = self.load_mask(batch_item, as_box=not use_masks)
 
             initial_shape = image.shape
             initial_width = image.shape[1]
             initial_height = image.shape[0]
+            indicated_initial_width = self.__image_info[batch_item]['width']
+            indicated_initial_height = self.__image_info[batch_item]['height']
+
+            masks = np.multiply(masks, initial_width / indicated_initial_width)
+            # print('Actual width: ', initial_width, 'indicated:', indicated_initial_width)
 
             has_crop = False
 
@@ -457,6 +464,10 @@ class AbstractDataset:
                 image_shape = image.shape
                 mask_shape = masks.shape
 
+                # start_total = start = time()
+                # print('======================')
+                # print('Starting Augmentation at 0.0')
+
                 # Make augmenters deterministic to apply similarly to images and masks
                 for child_augmenter in self.augmentation.get_all_children():
                     if isinstance(child_augmenter, CropToFixedSize):
@@ -465,14 +476,21 @@ class AbstractDataset:
                         child_augmenter.size = (min_side, min_side)
 
                 det = self.augmentation.to_deterministic()
+                # print('-- Applying Augmentation to image: {}'.format(det.__class__))
                 image = det.augment_image(image.astype(np.uint8))
                 # Change mask to np.uint8 because imgaug doesn't support np.bool
+                # took = time() - start
+                # print('-- Done after ', took)
+                # start = time()
 
                 # for mask in masks:
                 #     print([(m[0], m[1], m[2], m[3]) for m in masks])
                 if use_masks:
                     masks = det.augment_image(masks.astype(np.uint8), hooks=imgaug.HooksImages(activator=hook))
                 else:
+                    # print('-- Applying Augmentation to mask: {}'.format(det.__class__))
+
+
                     bbs = BoundingBoxesOnImage([
                         BoundingBox(x1=m[0], x2=m[2], y1=m[1], y2=m[3]) for m in masks
                     ], shape=initial_shape)
@@ -497,6 +515,8 @@ class AbstractDataset:
                                 ]
                             )
                     masks = np.array(aug_boxes)
+                    # took = time() - start
+                    # print('-- Done after\n\n', took)
 
                 # Verify that shapes didn't change
                 # assert image.shape == image_shape, "Augmentation shouldn't change image size"
@@ -526,6 +546,7 @@ class AbstractDataset:
                     image, max_dim=self.max_image_side_length, min_dim=self.min_image_side_length, downscale=downscale
                 )
 
+                # box_scale = scale * (initial_width / indicated_initial_width)
                 if use_masks:
                     masks = resize_mask(
                         masks, scale=scale, padding=p
@@ -661,16 +682,21 @@ class AbstractDataset:
         # Load image
         # image = skimage.io.imread(self.image_info[image_id]['path'])
         im = Image.open(self._images[image_id]['path'])
+        width, height = im.width, im.height
 
         sys.stdout.write('Loading image {}\n'.format(self._images[image_id]['path']))
-        im = im.resize(
-            (
-                int(self._images[image_id]['width']),
-                int(self._images[image_id]['height'])
-            ),
-            Image.ANTIALIAS
-        )
-
+        # if width != self._images[image_id]['width'] or height != self._images[image_id]['height']:
+        #     print('-- Resizing image on load from {}x{} to {}x{}'.format(width, height, self._images[image_id]['width'], self._images[image_id]['height']))
+        #     im = im.resize(
+        #         (
+        #             int(self._images[image_id]['width']),
+        #             int(self._images[image_id]['height'])
+        #         ),
+        #         Image.ANTIALIAS
+        #     )
+        # else:
+        #     im = im.copy()
+        # print('width', im.width)
         image = np.array(im, dtype=np.float32)
 
         # If grayscale. Convert to RGB for consistency.

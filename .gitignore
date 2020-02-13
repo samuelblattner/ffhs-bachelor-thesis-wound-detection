@@ -22,3 +22,4 @@ nohup.out
 /_venv
 pyvenv.cfg
 evaluation/**/*.pdf
+!evaluation/final/roc-curves/*.pdf

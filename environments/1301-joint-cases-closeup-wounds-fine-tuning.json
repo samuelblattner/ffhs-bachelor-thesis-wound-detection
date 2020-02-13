@@ -1,5 +1,5 @@
 {
-  "name": "1301 Joint Cases Closeup Wounds",
+  "name": "1301 Joint Cases Closeup Wounds Fine Tuning",
   "description": "Joint training on Cases and Closeup Wounds Confidential Dataset using Transfer Learning (frozen Backbone) and Image Augmentation",
   "batch_size": 5,
   "max_epochs": 1000,
@@ -12,9 +12,8 @@
   "x_val_k": "auto",
   "datasets": [
     {
-      "name": "cases-multishots",
+      "name": "cases-multishots-medium",
       "split_by_filename_base": true,
-      "pre_image_scale": 0.5,
       "max_examples_per_filename_base": 6,
       "split": [
         0.67,

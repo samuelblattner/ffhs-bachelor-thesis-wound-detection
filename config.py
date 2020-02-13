@@ -1,9 +1,9 @@
 from os.path import join
 
-from common.adapters.datasets.frcnn import FRCNNDataset
+# from common.adapters.datasets.frcnn import FRCNNDataset
 from common.adapters.datasets.retina import RetinaDataset
 from common.adapters.datasets.yolo3 import Yolo_3Dataset
-from common.adapters.models.frcnn import FRCNNAdapter
+# from common.adapters.models.frcnn import FRCNNAdapter
 from common.enums import NeuralNetEnum
 from common.adapters.models.retina import RetinaResnet50Adapter, RetinaResnet101Adapter, RetinaResnet152Adapter, RetinaDensenet121Adapter, \
     RetinaDensenet169Adapter, RetinaDensenet201Adapter, RetinaMobilenet128Adapter, RetinaMobilenet160Adapter, RetinaMobilenet192Adapter, \
@@ -36,7 +36,7 @@ NET_MAP = {
 FACTORY_MAP = {
     NeuralNetEnum.YOLO_3_DARKNET: Yolo3Adapter,
 
-    NeuralNetEnum.FRCNN_RESNET50: FRCNNAdapter,
+    # NeuralNetEnum.FRCNN_RESNET50: FRCNNAdapter,
 
     NeuralNetEnum.RETINA_RESNET50: RetinaResnet50Adapter,
     NeuralNetEnum.RETINA_RESNET101: RetinaResnet101Adapter,
@@ -56,7 +56,7 @@ FACTORY_MAP = {
 DATASET_CLASS_MAP = {
     NeuralNetEnum.YOLO_3_DARKNET: Yolo_3Dataset,
 
-    NeuralNetEnum.FRCNN_RESNET50: FRCNNDataset,
+    # NeuralNetEnum.FRCNN_RESNET50: FRCNNDataset,
 
     NeuralNetEnum.RETINA_RESNET50: RetinaDataset,
     NeuralNetEnum.RETINA_RESNET101: RetinaDataset,

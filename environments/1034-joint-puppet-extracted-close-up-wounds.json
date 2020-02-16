@@ -172,6 +172,14 @@
           ]
         }
       }
+    },
+    {
+      "name": "puppet_measure_bands",
+      "split": [
+        0.0,
+        0.5,
+        0.5
+      ]
     }
   ]
 }

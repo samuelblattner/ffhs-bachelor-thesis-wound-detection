@@ -58,6 +58,14 @@ if __name__ == '__main__':
                     pad_top = abs(min(y1, 0))
                     pad_bottom = max(0, y2 - image.shape[0])
 
+                    if pad_left:
+                        x1 += pad_left
+                        x2 += pad_left
+
+                    if pad_top:
+                        y1 += pad_top
+                        y2 += pad_top
+
                     image = np.pad(image, (
                         (pad_top, pad_bottom), (pad_left, pad_right), (0, 0)
                     ), mode='constant')
@@ -69,7 +77,11 @@ if __name__ == '__main__':
                         margin
                     )
 
-                    Image.fromarray(cropped_wound).save(join(args.output_dir, 'images', filename), quality=100)
+                    try:
+                        Image.fromarray(cropped_wound).save(join(args.output_dir, 'images', filename), quality=100)
+                    except ValueError:
+                        print(x1, x2, y1, y2)
+                        exit(1)
 
                     output_dataset.setdefault('images', []).append({
                         'id': image_id_counter,

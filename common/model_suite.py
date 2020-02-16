@@ -90,6 +90,8 @@ class ModelSuite:
         parser.add_argument('--gpu_no', help='GPU no', default=0, type=int, required=False)
         parser.add_argument('--batch_size', help='Batch Size', default=None, type=int, required=False)
         parser.add_argument('--start_from_xval_k', help='Start from xval k', default=None, type=int, required=False)
+        parser.add_argument('--loss_patience', help='Loss Patience', default=15, type=int, required=False)
+        parser.add_argument('--val_loss_patience', help='Val Loss Patience', default=30, type=int, required=False)
         parser.add_argument('--verbose', help='Vebose', default=False, type=bool, required=False)
 
         return parser.parse_args(sys.argv[1:])
@@ -101,6 +103,8 @@ class ModelSuite:
         """
 
         self.start_from_xval_k = args.start_from_xval_k
+        self.loss_patience = args.loss_patience
+        self.val_loss_patience = args.val_loss_patience
 
         # Load base arguments from json
         env = Environment.from_json(join(ENVIRONMENT_ROOT, '{}.json'.format(args.env)))
@@ -147,7 +151,7 @@ class ModelSuite:
 
     def _train(self):
         print('Use Transfer Learning: ', self.env.use_transfer_learning)
-        self.model.train(start_from_xval_k=self.start_from_xval_k)
+        self.model.train(start_from_xval_k=self.start_from_xval_k, loss_patience=self.loss_patience, val_loss_patience=self.val_loss_patience)
 
     def _predict(self):
 

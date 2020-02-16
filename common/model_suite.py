@@ -90,6 +90,7 @@ class ModelSuite:
         parser.add_argument('--gpu_no', help='GPU no', default=0, type=int, required=False)
         parser.add_argument('--batch_size', help='Batch Size', default=None, type=int, required=False)
         parser.add_argument('--start_from_xval_k', help='Start from xval k', default=None, type=int, required=False)
+        parser.add_argument('--verbose', help='Vebose', default=False, type=bool, required=False)
 
         return parser.parse_args(sys.argv[1:])
 

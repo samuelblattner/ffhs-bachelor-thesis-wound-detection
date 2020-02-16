@@ -1,7 +1,7 @@
 {
   "name": "1034 Joint Puppet Extracted Closeup Wounds",
   "description": "Default Network Configurations, Puppet and Close up wounds joint training",
-  "batch_size": 20,
+  "batch_size": 10,
   "max_epochs": 1000,
   "shuffle_dataset": true,
   "shuffle_seed": 0,

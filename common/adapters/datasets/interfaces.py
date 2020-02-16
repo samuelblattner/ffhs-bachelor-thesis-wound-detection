@@ -70,11 +70,13 @@ class AbstractDataset:
     _cur_img_idx: int = 0
     _batch_no: int = 0
 
+    _verbose: bool = False
+
     # Methods
     # =======
 
     def __init__(self, dataset_path: str, simplify_classes: bool = False, batch_size: int = 1, max_image_side_length: int = 1333,
-                 augmentation: Augmenter = None, center_color_to_imagenet: bool = False, image_scale_mode: str = 'square', pre_image_scale=1.0, min_image_side_length: int = 800,):
+                 augmentation: Augmenter = None, center_color_to_imagenet: bool = False, image_scale_mode: str = 'square', pre_image_scale=1.0, min_image_side_length: int = 800, verbose: bool = False):
         """
         Initialization of dataset generator.
 
@@ -105,6 +107,7 @@ class AbstractDataset:
         self._cur_img_idx: int = 0
         self._labels = []
         self._label_names = []
+        self._verbose = verbose
 
         self.simplify_classes = simplify_classes
         self.batch_size = batch_size
@@ -684,7 +687,8 @@ class AbstractDataset:
         im = Image.open(self._images[image_id]['path'])
         width, height = im.width, im.height
 
-        sys.stdout.write('Loading image {}\n'.format(self._images[image_id]['path']))
+        if self._verbose:
+            sys.stdout.write('Loading image {}\n'.format(self._images[image_id]['path']))
         # if width != self._images[image_id]['width'] or height != self._images[image_id]['height']:
         #     print('-- Resizing image on load from {}x{} to {}x{}'.format(width, height, self._images[image_id]['width'], self._images[image_id]['height']))
         #     im = im.resize(

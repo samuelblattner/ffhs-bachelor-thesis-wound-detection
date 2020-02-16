@@ -170,7 +170,8 @@ class BaseRetinaAdapter(AbstractModelAdapter):
 
         layer_names = (
             #'fc1000',
-            'bn5c_branch2c',
+            'res5c_relu',
+            # 'bn5c_branch2c',
             # 'bn4b35_branchs2c',
             # 'bn4b22_branch2c',
             # 'bn3b7_branch2c',

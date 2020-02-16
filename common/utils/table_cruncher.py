@@ -118,7 +118,7 @@ if __name__ == '__main__':
 
             f.write(latex)
             f.write(LATEX_POST_PARBOX)
-            f.write('\\label{{tab:{}}}\n\\caption{{{}}}\n'.format(label, caption))
+            f.write('\\caption{{{}}}\n\\label{{tab:{}}}\n'.format(caption, label))
             f.write('}')
 
             if t > 0 and ((t + 1) % 2 == 0 or (t + 1) >= len(TABLES)):

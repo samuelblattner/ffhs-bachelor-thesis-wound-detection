@@ -35,7 +35,7 @@ if __name__ == '__main__':
             annotations_per_image.setdefault(annotation.get('image_id'), []).append(annotation)
 
         # 2. Iterate over every image and crop on every annotation
-        for image_data in dataset.get('images', [])[:1]:
+        for image_data in dataset.get('images', []):
 
             base_image = np.asarray(Image.open(join(args.dataset_dir, image_data.get('path'))), dtype='uint8')
 

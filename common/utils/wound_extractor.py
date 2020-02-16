@@ -6,7 +6,7 @@ import numpy as np
 
 from PIL import Image
 
-MARGINS = [50, 100, 200]
+MARGINS = [50, 150, 300]
 
 
 if __name__ == '__main__':
@@ -96,12 +96,12 @@ if __name__ == '__main__':
 
                     for crop_ann, crop_annotation in enumerate(annotations_per_image.get(image_data.get('id'), [])):
 
-                        abs_cx, abs_cy, _, __ = crop_annotation.get('bbox')
+                        abs_cx, abs_cy, abs_w, abs_h = crop_annotation.get('bbox')
 
                         cx1 = min(cropped_image_width, max(0, int(abs_cx - x1)))
                         cy1 = min(cropped_image_height, max(0, int(abs_cy - y1)))
-                        cx2 = min(cropped_image_width, max(0, int(abs_cx + w - x1)))
-                        cy2 = min(cropped_image_height, max(0, int(abs_cy + h - y1)))
+                        cx2 = min(cropped_image_width, max(0, int(abs_cx + abs_w - x1)))
+                        cy2 = min(cropped_image_height, max(0, int(abs_cy + abs_h - y1)))
 
                         # Discard zero width or zero height boxes
                         if cx2 - cx1 <= 0 or cy2 - cy1 <= 0:
@@ -125,7 +125,7 @@ if __name__ == '__main__':
                             'id': annot_id_count,
                             'image_id': image_id_counter,
                             'category_id': annotation.get('category_id'),
-                            'bbox': [margin, margin, w, h],
+                            'bbox': [cx1, cy1, cx2 - cx1, cy2 - cy1],
                             'segmentation': cropped_segs
                         })
                         annot_id_count += 1
@@ -134,5 +134,5 @@ if __name__ == '__main__':
 
         output_dataset.setdefault('categories', dataset.get('categories'))
 
-        with open(join(args.output_dir, 'annotation.json'), 'w', encoding='utf-8') as o:
+        with open(join(args.output_dir, 'annotations.json'), 'w', encoding='utf-8') as o:
             o.write(json.dumps(output_dataset))

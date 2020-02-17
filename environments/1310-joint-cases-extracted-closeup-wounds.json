@@ -12,6 +12,16 @@
   "x_val_k": "auto",
   "datasets": [
     {
+      "name": "cases-multishots-medium",
+      "split_by_filename_base": true,
+      "max_examples_per_filename_base": 6,
+      "split": [
+        0.0,
+        0.5,
+        0.5
+      ]
+    },
+    {
       "name": "cases-multishots-extracted",
       "split_by_filename_base": true,
       "max_examples_per_filename_base": 6,
@@ -112,8 +122,8 @@
       "name": "closeup_wounds_confidential",
       "split": [
         0.67,
-        0.165,
-        0.165
+        0.33,
+        0.0
       ],
       "augmentation": {
         "type": "sequential",
@@ -193,8 +203,8 @@
       "name": "closeup_wounds",
       "split": [
         0.67,
-        0.165,
-        0.165
+        0.33,
+        0.0
       ],
       "augmentation": {
         "type": "sequential",

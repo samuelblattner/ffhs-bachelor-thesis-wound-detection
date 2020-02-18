@@ -170,7 +170,8 @@ class BaseRetinaAdapter(AbstractModelAdapter):
 
         layer_names = (
             #'fc1000',
-            'bn5c_branch2c',
+            'res5c_relu',
+            # 'bn5c_branch2c',
             # 'bn4b35_branchs2c',
             # 'bn4b22_branch2c',
             # 'bn3b7_branch2c',
@@ -211,7 +212,7 @@ class BaseRetinaAdapter(AbstractModelAdapter):
             heatmap = np.mean(layer_values, axis=-1)
             # heatmap = np.abs(heatmap)
             # heatmap = np.maximum(heatmap, 0)
-            heatmap = (heatmap - np.min(heatmap)) / (np.max(heatmap) - np.min(heatmap)) * (-1 if np.min(heatmap) < 0 else 1)
+            heatmap = (heatmap - np.min(heatmap)) / (np.max(heatmap) - np.min(heatmap)) # * (-1 if np.min(heatmap) < 0 else 1)
 
             heatmap = cv2.resize(heatmap, (image.shape[1], image.shape[0]))
             heatmap = np.uint8(255 * heatmap)

@@ -8,13 +8,13 @@ from matplotlib import pyplot as plt
 
 
 DATA_PATH = 'data/vanilla_datasets/'
-DATA_PATH = '/home/blsa/projects/confidential/wound-detection/data/'
+# DATA_PATH = '/home/blsa/projects/confidential/wound-detection/data/'
 
 DATASETS = (
     ('Puppet', 'puppet_measure_bands'),
     ('Full Body Shots', 'body_shots'),
     ('Close Up Wounds', 'closeup_wounds'),
-    ('Close Up Wounds Cases', 'closeup_wounds_confidential'),
+    ('Close Up Wounds Cases', 'close_up_wounds_conf'),
     ('Cases', 'cases-multishots'),
 )
 
@@ -119,6 +119,8 @@ if __name__ == '__main__':
             rel_heights = np.empty(shape=(3, 1), dtype='float32')
             areas = np.empty(shape=(3, 1), dtype='uint8')
             rel_areas = np.empty(shape=(3, 1), dtype='float32')
+
+            n_classes[0:3, 0] = 0
 
             for annotation in annotations:
                 x, y, w, h = annotation.get('bbox', [])

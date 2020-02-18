@@ -112,8 +112,8 @@
       "name": "closeup_wounds_confidential",
       "split": [
         0.67,
-        0.165,
-        0.165
+        0.33,
+        0.0
       ],
       "augmentation": {
         "type": "sequential",

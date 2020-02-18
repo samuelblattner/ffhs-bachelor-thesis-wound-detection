@@ -42,17 +42,16 @@ class RetinaDataset(AbstractDataset, Generator):
 
         images = [None] * num_items
 
-        all_images = None
+        # all_images = None
         sorted_images = [None] * num_items
-        all_annotations = None
+        # all_annotations = None
         sorted_annotations = [None] * num_items
 
         # print('Combingin:')
         # print('Received ', len(x_y_list), 'sources to combine')
 
-        for x_y, batch_idx in x_y_list:
+        for x_y, global_img_indices_in_batch in x_y_list:
             image_batch, target_batch = x_y
-            # print('-- Source has ', len(image_batch), 'images')
             imgs, annos = target_batch[0], target_batch[1]
 
             # if all_images is None:
@@ -64,8 +63,8 @@ class RetinaDataset(AbstractDataset, Generator):
             #     all_annotations = annos
             # else:
             #     all_annotations += annos
-
-            for image, idx, im, anno in zip(image_batch, batch_idx, imgs, annos):
+            #
+            for image, idx, im, anno in zip(image_batch, global_img_indices_in_batch, imgs, annos):
                 images[idx] = image
                 # print('----')
                 # print(anno.shape)
@@ -73,6 +72,45 @@ class RetinaDataset(AbstractDataset, Generator):
                 # print('----2')
                 sorted_images[idx] = im
                 sorted_annotations[idx] = anno
+
+        # for img, img2, annotations in zip(images, sorted_images, sorted_annotations):
+        #     draw = img.copy()
+        #
+        #     draw[..., 0] += 123.68  # R
+        #     draw[..., 1] += 116.779  # G
+        #     draw[..., 2] += 103.939  # B
+        #
+        #     for box, label in zip(annotations.get('bboxes'), annotations.get('labels')):
+        #         # print(annotation)
+        #         # box = annotation.get('bbox')
+        #         # label = annotation.get('category_id')
+        #         draw_box(draw, [int(box[1]), int(box[0]), int(box[3]), int(box[2])], color=(255, 200, 0))
+        #         caption = "{} {:.3f}".format(label, 0)
+        #
+        #         # print(self.labels.index(obj['name'])  )
+        #
+        #         cv2.putText(
+        #             img=draw,
+        #             text=caption,
+        #             org=(int(box[0]), int(box[1]) - 10),
+        #             fontFace=cv2.FONT_HERSHEY_PLAIN,
+        #             fontScale=1,
+        #             color=(255, 200, 0),
+        #             thickness=1)
+        #
+        #     from matplotlib import pyplot as plt
+        #     fig = plt.figure(figsize=(10,15))
+        #     plt.axis('off')
+        #     try:
+        #         plt.imshow(draw.astype(np.uint8))
+        #     except:
+        #         pass
+        #     # plt.show()
+        #     Image.fromarray(draw.astype('uint8')).save('train_images/{}.png'.format(randint(0, 1000)))
+        #     # with open('train_images/{}.png'.format(randint(0, 1000)), 'wb') as f:
+        #     #     fig.savefig(f, format='png')
+        #
+        # exit(0)
 
         return self.compute_inputs(images), self.compute_targets(sorted_images, sorted_annotations)
 

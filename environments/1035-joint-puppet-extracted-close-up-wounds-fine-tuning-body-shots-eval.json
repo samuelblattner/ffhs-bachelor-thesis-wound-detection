@@ -1,0 +1,24 @@
+{
+  "name": "1035 Joint Puppet Extracted Closeup Wounds Fine Tuning",
+  "description": "Default Network Configurations, Puppet and Close up wounds joint training, fine tuning",
+  "batch_size": 10,
+  "max_epochs": 1000,
+  "shuffle_dataset": true,
+  "shuffle_seed": 0,
+  "simplify_classes": true,
+  "use_transfer_learning": true,
+  "allow_base_layer_training": true,
+  "k_fold_x_val": 4,
+  "x_val_k": "auto",
+  "datasets": [
+    {
+      "name": "body_shots",
+      "pre_image_scale": 1.0,
+      "split": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    }
+  ]
+}

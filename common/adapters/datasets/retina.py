@@ -228,40 +228,41 @@ class RetinaDataset(AbstractDataset, Generator):
             # Uncomment for DEBUG
             # ==========================
             # ==========================
-            # draw = image.copy()
+            # if self.is_training_dataset:
+            #     draw = image.copy()
             #
-            # draw[..., 0] += 123.68  # R
-            # draw[..., 1] += 116.779  # G
-            # draw[..., 2] += 103.939  # B
+            #     draw[..., 0] += 123.68  # R
+            #     draw[..., 1] += 116.779  # G
+            #     draw[..., 2] += 103.939  # B
             #
-            # for label, box in zip(label_set, box_set):
-            #     draw_box(draw, [int(box[1]), int(box[0]), int(box[3]), int(box[2])], color=(255, 200, 0))
-            #     caption = "{} {:.3f}".format(label, 0)
+            #     for label, box in zip(label_set, box_set):
+            #         draw_box(draw, [int(box[1]), int(box[0]), int(box[3]), int(box[2])], color=(255, 200, 0))
+            #         caption = "{} {:.3f}".format(label, 0)
             #
-            #     # print(self.labels.index(obj['name'])  )
+            #         # print(self.labels.index(obj['name'])  )
             #
-            #     cv2.putText(
-            #         img=draw,
-            #         text=caption,
-            #         org=(int(box[0]), int(box[1]) - 10),
-            #         fontFace=cv2.FONT_HERSHEY_PLAIN,
-            #         fontScale=1,
-            #         color=(255, 200, 0),
-            #         thickness=1)
+            #         cv2.putText(
+            #             img=draw,
+            #             text=caption,
+            #             org=(int(box[0]), int(box[1]) - 10),
+            #             fontFace=cv2.FONT_HERSHEY_PLAIN,
+            #             fontScale=1,
+            #             color=(255, 200, 0),
+            #             thickness=1)
             #
-            # from matplotlib import pyplot as plt
-            # fig = plt.figure(figsize=(10,15))
-            # plt.axis('off')
-            # try:
-            #     plt.imshow(draw.astype(np.uint8))
-            # except:
-            #     pass
-            # # plt.show()
-            # Image.fromarray(draw.astype('uint8')).save('train_images/{}.png'.format(randint(0, 1000)))
-            # # with open('train_images/{}.png'.format(randint(0, 1000)), 'wb') as f:
-            # #     fig.savefig(f, format='png')
+            #     from matplotlib import pyplot as plt
+            #     fig = plt.figure(figsize=(10,15))
+            #     plt.axis('off')
+            #     try:
+            #         plt.imshow(draw.astype(np.uint8))
+            #     except:
+            #         pass
+            #     # plt.show()
+            #     Image.fromarray(draw.astype('uint8')).save('train_images/{}.png'.format(randint(0, 1000)))
+            #     # with open('train_images/{}.png'.format(randint(0, 1000)), 'wb') as f:
+            #     #     fig.savefig(f, format='png')
             #
-            # # exit(0)
+            #     # exit(0)
             # ==========================
             # ==========================
 

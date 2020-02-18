@@ -34,8 +34,11 @@ if __name__ == '__main__':
         for annotation in dataset.get('annotations', []):
             annotations_per_image.setdefault(annotation.get('image_id'), []).append(annotation)
 
+        num_images = len(dataset.get('images', []))
         # 2. Iterate over every image and crop on every annotation
-        for image_data in dataset.get('images', []):
+        for i_idx, image_data in enumerate(dataset.get('images', [])):
+
+            print('-- Extracting wounds from image {} of {}...'.format(i_idx, num_images))
 
             base_image = np.asarray(Image.open(join(args.dataset_dir, image_data.get('path'))), dtype='uint8')
 
@@ -69,6 +72,23 @@ if __name__ == '__main__':
                     image = np.pad(image, (
                         (pad_top, pad_bottom), (pad_left, pad_right), (0, 0)
                     ), mode='constant')
+
+                    image[0:pad_top, :, 0] = 123.68
+                    image[0:pad_top, :, 1] = 116.779
+                    image[0:pad_top, :, 2] = 103.939
+
+                    image[:, 0:pad_left, 0] = 123.68
+                    image[:, 0:pad_left, 1] = 116.779
+                    image[:, 0:pad_left, 2] = 103.939
+
+                    image[image.shape[0]-pad_bottom:image.shape[0], :, 0] = 123.68
+                    image[image.shape[0]-pad_bottom:image.shape[0], :, 1] = 116.779
+                    image[image.shape[0]-pad_bottom:image.shape[0], :, 2] = 103.939
+
+                    image[:, image.shape[1]-pad_right:image.shape[1], 0] = 123.68
+                    image[:, image.shape[1]-pad_right:image.shape[1], 1] = 116.779
+                    image[:, image.shape[1]-pad_right:image.shape[1], 2] = 103.939
+
 
                     cropped_wound = image[y1:y2, x1:x2, :]
                     filename = '{}-w{}-{}.jpg'.format(

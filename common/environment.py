@@ -252,7 +252,7 @@ class Environment:
 
         return aug_class(*args, **sub_params)
 
-    def prepare(self):
+    def prepare(self, i=0, load_data: bool = True):
         if not self.valid:
             self.validate()
 
@@ -263,58 +263,72 @@ class Environment:
         self.__x_val_val_datasets = []
         self.__x_val_test_datasets = []
 
-        for i in range(xval_iter, max_xval_iter):
+        # for i in range(xval_iter, max_xval_iter):
 
-            datasets = self.datasets if len(self.datasets) > 0 else [{
-                'name': self.train_dataset_name,
-                'split': self.dataset_split,
-                'pre_image_scale': self.pre_image_scale,
-                'split_by_filename_base': self.split_by_filename_base,
-                'max_examples_per_filename_base': self.max_examples_per_filename_base,
-                'augmentation': self.inflate_augmentation(self.augmentation) if self.augmentation else None
-            }]
+        datasets = self.datasets if len(self.datasets) > 0 else [{
+            'name': self.train_dataset_name,
+            'split': self.dataset_split,
+            'pre_image_scale': self.pre_image_scale,
+            'split_by_filename_base': self.split_by_filename_base,
+            'max_examples_per_filename_base': self.max_examples_per_filename_base,
+            'augmentation': self.inflate_augmentation(self.augmentation) if self.augmentation else None
+        }]
 
-            train_datasets = []
-            val_datasets = []
-            test_datasets = []
+        train_datasets = []
+        val_datasets = []
+        test_datasets = []
 
-            for dataset in datasets:
-                augmentation = self.inflate_augmentation(dataset.get('augmentation', {}))
-                train_dataset, val_dataset, test_dataset = self.dataset_class.create_datasets(
-                    train_dataset_path=join(self.data_root, dataset.get('name')),
-                    dataset_split=dataset.get('split'),
-                    shuffle=self.shuffle_dataset,
-                    shuffle_seed=self.shuffle_seed,
-                    batch_size=self.batch_size,
-                    max_image_side_length=self.max_image_side_length,
-                    augmentation=augmentation,
-                    center_color_to_imagenet=self.center_color_to_imagenet,
-                    simplify_classes=self.simplify_classes,
-                    image_scale_mode=self.img_scale_mode,
-                    pre_image_scale=dataset.get('pre_image_scale', 1.0),
-                    split_by_filename_base=dataset.get('split_by_filename_base'),
-                    max_examples_per_filename_base=dataset.get('max_examples_per_filename_base', 0),
-                    k_fold_x_val=self.k_fold_x_val,
-                    x_val_k=self.x_val_k if not self.auto_xval else i,
-                    x_val_ignore_dataset=self.x_val_ignore_dataset,
-                    x_val_auto_env_name=self.x_val_auto_env_name
-                )
+        datasets = sorted(datasets, key=lambda d: d.get('filename_base_master', False), reverse=True)
+        dataset_names = [d.get('name', 'No name') for d in datasets]
 
-                train_dataset.IMAGE_FACTOR = val_dataset.IMAGE_FACTOR = test_dataset.IMAGE_FACTOR = dataset.get('pre_image_scale', 1.0)
+        if load_data:
+            print('-- Environment is preparing the datasets: {}...'.format(', '.join(dataset_names)))
+            if self.k_fold_x_val:
+                print('---- Using {}-fold cross validation, current k is: {}'.format(self.k_fold_x_val, self.x_val_k if not self.auto_xval else i))
 
-                self.class_names = train_dataset.get_label_names()
+        for dataset, dataset_name in zip(datasets, dataset_names):
+            augmentation = self.inflate_augmentation(dataset.get('augmentation', {}))
+            train_dataset, val_dataset, test_dataset = self.dataset_class.create_datasets(
+                train_dataset_path=join(self.data_root, dataset.get('name')),
+                dataset_split=dataset.get('split'),
+                shuffle=self.shuffle_dataset,
+                shuffle_seed=self.shuffle_seed,
+                batch_size=self.batch_size,
+                max_image_side_length=self.max_image_side_length,
+                augmentation=augmentation,
+                center_color_to_imagenet=self.center_color_to_imagenet,
+                simplify_classes=self.simplify_classes,
+                image_scale_mode=self.img_scale_mode,
+                pre_image_scale=dataset.get('pre_image_scale', 1.0),
+                split_by_filename_base=dataset.get('split_by_filename_base'),
+                max_examples_per_filename_base=dataset.get('max_examples_per_filename_base', 0),
+                k_fold_x_val=self.k_fold_x_val,
+                x_val_k=self.x_val_k if not self.auto_xval else i,
+                x_val_ignore_dataset=self.x_val_ignore_dataset,
+                x_val_auto_env_name=self.x_val_auto_env_name,
+                filename_base_master=dataset.get('filename_base_master', False),
+                filename_base_slave=dataset.get('filename_base_slave', False),
+                name=dataset_name,
+                load_data=load_data
+            )
 
-                train_datasets.append(train_dataset)
-                val_datasets.append(val_dataset)
-                test_datasets.append(test_dataset)
+            train_dataset.IMAGE_FACTOR = val_dataset.IMAGE_FACTOR = test_dataset.IMAGE_FACTOR = dataset.get('pre_image_scale', 1.0)
 
-            self.__train_dataset = UnionDataset(train_datasets, batch_size=self.batch_size)
-            self.__val_dataset = UnionDataset(val_datasets, batch_size=self.batch_size)
-            self.__test_dataset = UnionDataset(test_datasets, batch_size=self.batch_size)
+            self.class_names = train_dataset.get_label_names()
 
-            self.__x_val_train_datasets.append(self.__train_dataset)
-            self.__x_val_val_datasets.append(self.__val_dataset)
-            self.__x_val_test_datasets.append(self.__test_dataset)
+            train_datasets.append(train_dataset)
+            train_dataset.is_training_dataset = True
+            val_datasets.append(val_dataset)
+            test_datasets.append(test_dataset)
+
+        self.__train_dataset = UnionDataset(train_datasets, batch_size=self.batch_size)
+        self.__val_dataset = UnionDataset(val_datasets, batch_size=self.batch_size)
+        self.__test_dataset = UnionDataset(test_datasets, batch_size=self.batch_size)
+        self.__train_dataset.is_training_dataset = True
+
+            # self.__x_val_train_datasets.append(self.__train_dataset)
+            # self.__x_val_val_datasets.append(self.__val_dataset)
+            # self.__x_val_test_datasets.append(self.__test_dataset)
 
     def get_datasets(self) -> Tuple[AbstractDataset, AbstractDataset, AbstractDataset]:
         return self.__train_dataset, self.__val_dataset, self.__test_dataset
@@ -322,8 +336,13 @@ class Environment:
     def iter_datasets(self):
         def dataset_iter():
 
-            for train_dataset, val_dataset, test_dataset in zip(self.__x_val_train_datasets, self.__x_val_val_datasets, self.__x_val_test_datasets):
-                yield train_dataset, val_dataset, test_dataset
+            xval_iter = 0
+            max_xval_iter = self.k_fold_x_val if self.auto_xval else 1
+
+            for i in range(xval_iter, max_xval_iter):
+                self.prepare(i)
+
+                yield self.__train_dataset, self.__val_dataset, self.__test_dataset
 
         return dataset_iter()
 

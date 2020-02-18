@@ -1,7 +1,7 @@
 {
   "name": "1310 Joint Cases Extracted Closeup Wounds",
   "description": "Joint training on Cases and Closeup Wounds Confidential Dataset using Transfer Learning (frozen Backbone) and Image Augmentation",
-  "batch_size": 10,
+  "batch_size": 8,
   "max_epochs": 1000,
   "shuffle_dataset": true,
   "shuffle_seed": 0,
@@ -14,6 +14,7 @@
     {
       "name": "cases-multishots-medium",
       "split_by_filename_base": true,
+      "filename_base_slave": true,
       "max_examples_per_filename_base": 6,
       "split": [
         0.0,
@@ -24,7 +25,7 @@
     {
       "name": "cases-multishots-extracted",
       "split_by_filename_base": true,
-      "max_examples_per_filename_base": 6,
+      "filename_base_master": true,
       "split": [
         0.67,
         0.165,
@@ -46,32 +47,20 @@
                 "p": 0.5
               }
             },
-            {
+                        {
               "type": "affine",
               "params": {
                 "scale": {
-                  "type": "Add",
-                  "params": {
-                    "other_param": {
-                      "type": "Absolute",
-                      "params": {
-                        "other_param": {
-                          "type": "Normal",
-                          "params": {
-                            "loc": 1.0,
-                            "scale": 4.0
-                          }
-                        }
-                      }
-                    },
-                    "val": 1.0
-                  }
+                  "x": "(0.8, 1.2)",
+                  "y": "(0.8, 1.2)"
                 },
                 "translate_percent": {
-                  "x": "(-0.5, 0.5)",
-                  "y": "(-0.5, 0.5)"
+                  "x": "(-0.3, 0.3)",
+                  "y": "(-0.3, 0.3)"
                 },
-                "rotate": "[0.0, 90.0, 180.0, 270.0]"
+                "rotate": "[0.0, 90.0, 180.0, 270.0]",
+                "mode": "constant",
+                "cval":114.8
               }
             },
             {
@@ -145,14 +134,16 @@
               "type": "affine",
               "params": {
                 "scale": {
-                  "x": "(0.8, 1.2)",
-                  "y": "(0.8, 1.2)"
+                  "x": "(0.8, 1.1)",
+                  "y": "(0.8, 1.1)"
                 },
                 "translate_percent": {
                   "x": "(-0.3, 0.3)",
                   "y": "(-0.3, 0.3)"
                 },
-                "rotate": "[0.0, 90.0, 180.0, 270.0]"
+                "rotate": "[0.0, 90.0, 180.0, 270.0]",
+                "mode": "constant",
+                "cval":114.8
               }
             },
             {
@@ -226,14 +217,16 @@
               "type": "affine",
               "params": {
                 "scale": {
-                  "x": "(0.8, 1.2)",
-                  "y": "(0.8, 1.2)"
+                  "x": "(0.8, 1.1)",
+                  "y": "(0.8, 1.1)"
                 },
                 "translate_percent": {
                   "x": "(-0.3, 0.3)",
                   "y": "(-0.3, 0.3)"
                 },
-                "rotate": "[0.0, 90.0, 180.0, 270.0]"
+                "rotate": "[0.0, 90.0, 180.0, 270.0]",
+                "mode": "constant",
+                "cval":114.8
               }
             },
             {

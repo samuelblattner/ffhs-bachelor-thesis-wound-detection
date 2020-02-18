@@ -71,6 +71,14 @@ class AbstractDataset:
     _batch_no: int = 0
 
     _verbose: bool = False
+    _data_loaded: bool = False
+
+    is_training_dataset = False
+
+    master_train_filename_bases = []
+    master_val_filename_bases = []
+    master_test_filename_bases = []
+
 
     # Methods
     # =======
@@ -136,7 +144,8 @@ class AbstractDataset:
             train_dataset_path: str, val_dataset_path: str = None, test_dataset_path: str = None,
             dataset_split: Tuple = None, shuffle: bool = False, shuffle_seed: int = None, split_by_filename_base: bool = False,
             max_examples_per_filename_base=0, k_fold_x_val: int = 1, x_val_k: int = 0, x_val_ignore_dataset: bool = False,
-            x_val_auto_env_name: bool = True, **kwargs):
+            x_val_auto_env_name: bool = True, filename_base_master: bool = False, filename_base_slave: bool = False,
+            name='noname', load_data: bool = True, **kwargs):
         """
         Factory method to create training-, validation- and test data from an external dataset.
         If no path is indicated for validation and test dataset, and a dataset_split tuple is
@@ -175,164 +184,207 @@ class AbstractDataset:
         test_dataset = cls(test_dataset_path or train_dataset_path, **kwargs)
 
         # Split train dataset if no separate paths for validation and training datasets were specified
-        if val_dataset_path is None and test_dataset_path is None and dataset_split:
+        if load_data:
+            if val_dataset_path is None and test_dataset_path is None and dataset_split:
 
-            all_image_infos = train_dataset.get_image_info()
+                all_image_infos = train_dataset.get_image_info()
 
-            train_ratio, val_ratio, test_ratio = dataset_split
-            n_images = len(all_image_infos)
-            n_train = int(train_ratio * n_images)
-            n_val = int(val_ratio * n_images)
+                train_ratio, val_ratio, test_ratio = dataset_split
+                n_images = len(all_image_infos)
+                n_train = int(train_ratio * n_images)
+                n_val = int(val_ratio * n_images)
 
-            if shuffle:
-                if shuffle_seed is not None:
-                    np.random.seed(shuffle_seed)
+                if shuffle:
+                    if shuffle_seed is not None:
+                        np.random.seed(shuffle_seed)
 
-                train_image_ids = list(np.random.choice(
-                    a=range(n_images),
-                    size=n_train,
-                    replace=False,
-                ))
+                    train_image_ids = list(np.random.choice(
+                        a=range(n_images),
+                        size=n_train,
+                        replace=False,
+                    ))
 
-                remaining_image_ids = [image_id for image_id in range(n_images) if image_id not in train_image_ids]
+                    remaining_image_ids = [image_id for image_id in range(n_images) if image_id not in train_image_ids]
 
-                val_image_ids = list(np.random.choice(
-                    a=remaining_image_ids,
-                    size=n_val,
-                    replace=False
-                ))
+                    val_image_ids = list(np.random.choice(
+                        a=remaining_image_ids,
+                        size=n_val,
+                        replace=False
+                    ))
 
-            else:
-                train_image_ids = [i for i in range(n_train)]
-                val_image_ids = [i for i in range(n_train, n_train + n_val)]
-
-            train_image_infos = []
-            val_image_infos = []
-            test_image_infos = []
-
-            test_image_ids = list(filter(lambda i: i not in train_image_ids and i not in val_image_ids, range(n_images)))
-
-            if k_fold_x_val > 1 and not x_val_ignore_dataset:
-                all_ids = train_image_ids + val_image_ids + test_image_ids
-                shift = n_images / k_fold_x_val
-
-                cut_point = int(n_images - x_val_k * shift)
-                cut_off_end = all_ids[cut_point:]
-                all_ids = cut_off_end + all_ids[:cut_point]
-                train_image_ids = all_ids[:n_train]
-                val_image_ids = all_ids[n_train:n_train + n_val]
-                test_image_ids = all_ids[n_train+n_val:]
-
-            if split_by_filename_base:
-                checked_ids = []
-                while len(checked_ids) < len(all_image_infos):
-                    for image_id in range(n_images):
-
-                        checked_ids.append(image_id)
-
-                        image_info = all_image_infos[image_id]
-                        file_name_base = re.search(r'([\w\d]{16}).*-\d+\.jpg', image_info.get('path'))
-
-                        if not file_name_base:
-                            continue
-
-                        file_name_base = file_name_base.group(1)
-
-                        train_deficit = n_train - len(train_image_ids)
-                        val_deficit = n_val - len(val_image_ids)
-                        test_deficit = n_images - n_train - n_val - len(test_image_ids)
-
-                        if train_deficit > val_deficit and train_deficit > test_deficit:
-                            target = train_image_ids
-                            sources = (val_image_ids, test_image_ids)
-                        elif val_deficit > train_deficit and val_deficit > test_deficit:
-                            target = val_image_ids
-                            sources = (test_image_ids, train_image_ids)
-                        else:
-                            target = test_image_ids
-                            sources = (train_image_ids, val_image_ids)
-
-                        for source in sources:
-
-                            remove_ids = []
-                            for image_id in source:
-                                if file_name_base in all_image_infos[image_id].get('path'):
-                                    target.append(image_id)
-                                    remove_ids.append(image_id)
-
-                            for remove_id in remove_ids:
-
-                                source.pop(source.index(remove_id))
-
-            for image_id in range(n_images):
-                if image_id in train_image_ids:
-                    train_image_infos.append(all_image_infos[image_id])
-                elif image_id in val_image_ids:
-                    val_image_infos.append(all_image_infos[image_id])
                 else:
-                    test_image_infos.append(all_image_infos[image_id])
-                    test_image_ids.append(image_id)
+                    train_image_ids = [i for i in range(n_train)]
+                    val_image_ids = [i for i in range(n_train, n_train + n_val)]
 
-            if max_examples_per_filename_base > 0:
-                file_name_bases_count = {}
-                images_info_sets = (
-                    (train_image_ids, train_image_infos),
-                    (val_image_ids, val_image_infos),
-                    (test_image_ids, test_image_infos)
-                )
-                for image_ids, image_infos in images_info_sets:
-                    remove_ids = []
-                    for image_id, image_info in zip(image_ids, image_infos):
+                train_image_infos = []
+                val_image_infos = []
+                test_image_infos = []
 
-                        file_name_base = re.findall(r'([\w\d_-]{32}-)', image_info.get('path'))
-                        if not file_name_base:
-                            continue
+                test_image_ids = list(filter(lambda i: i not in train_image_ids and i not in val_image_ids, range(n_images)))
 
-                        file_name_base = file_name_base[0]
+                if k_fold_x_val > 1 and not x_val_ignore_dataset:
+                    all_ids = train_image_ids + val_image_ids + test_image_ids
+                    shift = n_images / k_fold_x_val
 
-                        if file_name_bases_count.get(file_name_base, 0) >= max_examples_per_filename_base:
-                            remove_ids.append(image_id)
-                            continue
+                    cut_point = int(n_images - x_val_k * shift)
+                    cut_off_end = all_ids[cut_point:]
+                    all_ids = cut_off_end + all_ids[:cut_point]
+                    train_image_ids = all_ids[:n_train]
+                    val_image_ids = all_ids[n_train:n_train + n_val]
+                    test_image_ids = all_ids[n_train+n_val:]
 
-                        file_name_bases_count.setdefault(file_name_base, 0)
-                        file_name_bases_count[file_name_base] += 1
+                train_file_name_bases = {}
+                val_file_name_bases = {}
+                test_file_name_bases = {}
 
-                    for remove_id in remove_ids:
-                        image_infos.pop(image_ids.index(remove_id))
-                        image_ids.remove(remove_id)
+                for image_id in range(n_images):
 
-            # print('Train:')
-            # for info in sorted(train_image_infos, key=lambda t: t.get('path')):
-            #     print(info.get('path'), end='')
-            #     for other in (val_image_infos, test_image_infos):
-            #         for info2 in other:
-            #             if info.get('path') == info2.get('path'):
-            #                 print('FAIL')
-            #                 raise ValueError()
-            #     else:
-            #         print('')
-            #
-            # print('Val:')
-            # for info in sorted(val_image_infos, key=lambda t: t.get('path')):
-            #     print(info.get('path'), end = '')
-            #     for info2 in test_image_infos:
-            #         if info.get('path') == info2.get('path'):
-            #             print('FAIL')
-            #             raise ValueError()
-            #     else:
-            #         print('')
-            # print('Test:')
-            # for info in sorted(test_image_infos, key=lambda t: t.get('path')):
-            #     print(info.get('path'))
-            #
-            # exit(0)
-            train_dataset.set_image_info(train_image_infos)
-            val_dataset.set_image_info(val_image_infos)
-            test_dataset.set_image_info(test_image_infos)
+                    image_info = all_image_infos[image_id]
+                    file_name_base = re.search(r'([\w\d]{16}).*-\d+\.jpg', image_info.get('path'))
 
-            train_dataset.generate_image_id_map()
-            val_dataset.generate_image_id_map()
-            test_dataset.generate_image_id_map()
+                    if not file_name_base:
+                        continue
+
+                    file_name_base = file_name_base.group(1)
+                    if image_id in train_image_ids:
+                        train_file_name_bases.setdefault(file_name_base, []).append(image_id)
+                    elif image_id in val_image_ids:
+                        val_file_name_bases.setdefault(file_name_base, []).append(image_id)
+                    else:
+                        test_file_name_bases.setdefault(file_name_base, []).append(image_id)
+
+                if split_by_filename_base:
+                    checked_ids = []
+                    print('---- Redistributing images by filename base for dataset ', name)
+                    while len(checked_ids) < len(all_image_infos):
+                        for image_id in range(n_images):
+
+                            # print('Split by filename base: Processing image {} of {}'.format(image_id, n_images))
+
+                            checked_ids.append(image_id)
+
+                            image_info = all_image_infos[image_id]
+                            file_name_base = re.search(r'([\w\d]{16}).*-\d+\.jpg', image_info.get('path'))
+
+                            if not file_name_base:
+                                continue
+
+                            file_name_base = file_name_base.group(1)
+
+                            train_deficit = n_train - len(train_image_ids)
+                            val_deficit = n_val - len(val_image_ids)
+                            test_deficit = n_images - n_train - n_val - len(test_image_ids)
+
+                            if filename_base_slave and file_name_base in AbstractDataset.master_train_filename_bases or not filename_base_slave and train_deficit > val_deficit and train_deficit > test_deficit:
+                                target = train_image_ids
+                                target_fnb = train_file_name_bases
+                                sources = (val_image_ids, test_image_ids)
+                                file_name_bases = (val_file_name_bases, test_file_name_bases)
+
+                            elif filename_base_slave and file_name_base in AbstractDataset.master_val_filename_bases or not filename_base_slave and val_deficit > train_deficit and val_deficit > test_deficit:
+                                target = val_image_ids
+                                target_fnb = val_file_name_bases
+                                sources = (test_image_ids, train_image_ids)
+                                file_name_bases = (test_file_name_bases, train_file_name_bases)
+
+                            else:
+                                target = test_image_ids
+                                target_fnb = test_file_name_bases
+                                sources = (train_image_ids, val_image_ids)
+                                file_name_bases = (train_file_name_bases, val_file_name_bases)
+
+                            for fnb, source in zip(file_name_bases, sources):
+
+                                remove_ids = []
+
+                                if file_name_base not in fnb:
+                                    continue
+
+                                for _image_id in fnb.get(file_name_base, []):
+                                    if not filename_base_slave:
+                                        target.append(_image_id)
+                                        target_fnb.setdefault(file_name_base, []).append(_image_id)
+                                    remove_ids.append(_image_id)
+
+                                for remove_id in remove_ids:
+                                    source.pop(source.index(remove_id))
+
+                                del fnb[file_name_base]
+
+                    if filename_base_master:
+                        AbstractDataset.master_train_filename_bases = list(train_file_name_bases.keys())
+                        AbstractDataset.master_val_filename_bases = list(val_file_name_bases.keys())
+                        AbstractDataset.master_test_filename_bases = list(test_file_name_bases.keys())
+
+                for image_id in range(n_images):
+                    if image_id in train_image_ids:
+                        train_image_infos.append(all_image_infos[image_id])
+                    elif image_id in val_image_ids:
+                        val_image_infos.append(all_image_infos[image_id])
+                    else:
+                        test_image_infos.append(all_image_infos[image_id])
+                        test_image_ids.append(image_id)
+
+                if max_examples_per_filename_base > 0:
+                    file_name_bases_count = {}
+                    images_info_sets = (
+                        (train_image_ids, train_image_infos),
+                        (val_image_ids, val_image_infos),
+                        (test_image_ids, test_image_infos)
+                    )
+                    for image_ids, image_infos in images_info_sets:
+                        remove_ids = []
+                        for image_id, image_info in zip(image_ids, image_infos):
+
+                            file_name_base = re.findall(r'([\w\d_-]{32}-)', image_info.get('path'))
+                            if not file_name_base:
+                                continue
+
+                            file_name_base = file_name_base[0]
+
+                            if file_name_bases_count.get(file_name_base, 0) >= max_examples_per_filename_base:
+                                remove_ids.append(image_id)
+                                continue
+
+                            file_name_bases_count.setdefault(file_name_base, 0)
+                            file_name_bases_count[file_name_base] += 1
+
+                        for remove_id in remove_ids:
+                            image_infos.pop(image_ids.index(remove_id))
+                            image_ids.remove(remove_id)
+
+                # print('Train:')
+                # for info in sorted(train_image_infos, key=lambda t: t.get('path')):
+                #     print(info.get('path'), end='')
+                #     for other in (val_image_infos, test_image_infos):
+                #         for info2 in other:
+                #             if info.get('path') == info2.get('path'):
+                #                 print('FAIL')
+                #                 raise ValueError()
+                #     else:
+                #         print('')
+                #
+                # print('Val:')
+                # for info in sorted(val_image_infos, key=lambda t: t.get('path')):
+                #     print(info.get('path'), end = '')
+                #     for info2 in test_image_infos:
+                #         if info.get('path') == info2.get('path'):
+                #             print('FAIL')
+                #             raise ValueError()
+                #     else:
+                #         print('')
+                # print('Test:')
+                # for info in sorted(test_image_infos, key=lambda t: t.get('path')):
+                #     print(info.get('path'))
+                #
+                # # exit(0)
+                train_dataset.set_image_info(train_image_infos)
+                val_dataset.set_image_info(val_image_infos)
+                test_dataset.set_image_info(test_image_infos)
+
+                train_dataset.generate_image_id_map()
+                val_dataset.generate_image_id_map()
+                test_dataset.generate_image_id_map()
 
         # Prepare datasets
         train_dataset.compile_dataset()

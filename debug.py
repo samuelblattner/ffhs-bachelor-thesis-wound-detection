@@ -6,13 +6,13 @@ from numpy import int8, uint8
 import numpy as np
 
 from common.enums import ModelPurposeEnum, NeuralNetEnum
-from common.model_suite import ModelSuite
+from common.model_suite import WoundDetectionSuite
 
 import tensorflow as tf
 tf.get_logger().setLevel('ERROR')
 
 
-class Debug(ModelSuite):
+class Debug(WoundDetectionSuite):
 
     def __init__(self):
 

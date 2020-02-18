@@ -10,7 +10,7 @@
   "allow_base_layer_training": true,
   "k_fold_x_val": 4,
   "x_val_k": "auto",
-  "datasets": [
+    "datasets": [
     {
       "name": "cases-multishots-medium",
       "split_by_filename_base": true,
@@ -24,7 +24,6 @@
     {
       "name": "cases-multishots-extracted",
       "split_by_filename_base": true,
-      "max_examples_per_filename_base": 6,
       "split": [
         0.67,
         0.165,
@@ -46,32 +45,20 @@
                 "p": 0.5
               }
             },
-            {
+                        {
               "type": "affine",
               "params": {
                 "scale": {
-                  "type": "Add",
-                  "params": {
-                    "other_param": {
-                      "type": "Absolute",
-                      "params": {
-                        "other_param": {
-                          "type": "Normal",
-                          "params": {
-                            "loc": 1.0,
-                            "scale": 4.0
-                          }
-                        }
-                      }
-                    },
-                    "val": 1.0
-                  }
+                  "x": "(0.8, 1.2)",
+                  "y": "(0.8, 1.2)"
                 },
                 "translate_percent": {
-                  "x": "(-0.5, 0.5)",
-                  "y": "(-0.5, 0.5)"
+                  "x": "(-0.3, 0.3)",
+                  "y": "(-0.3, 0.3)"
                 },
-                "rotate": "[0.0, 90.0, 180.0, 270.0]"
+                "rotate": "[0.0, 90.0, 180.0, 270.0]",
+                "mode": "constant",
+                "cval":114.8
               }
             },
             {
@@ -122,8 +109,8 @@
       "name": "closeup_wounds_confidential",
       "split": [
         0.67,
-        0.165,
-        0.165
+        0.33,
+        0.0
       ],
       "augmentation": {
         "type": "sequential",
@@ -145,14 +132,16 @@
               "type": "affine",
               "params": {
                 "scale": {
-                  "x": "(0.8, 1.2)",
-                  "y": "(0.8, 1.2)"
+                  "x": "(0.8, 1.1)",
+                  "y": "(0.8, 1.1)"
                 },
                 "translate_percent": {
                   "x": "(-0.3, 0.3)",
                   "y": "(-0.3, 0.3)"
                 },
-                "rotate": "[0.0, 90.0, 180.0, 270.0]"
+                "rotate": "[0.0, 90.0, 180.0, 270.0]",
+                "mode": "constant",
+                "cval":114.8
               }
             },
             {
@@ -203,8 +192,8 @@
       "name": "closeup_wounds",
       "split": [
         0.67,
-        0.165,
-        0.165
+        0.33,
+        0.0
       ],
       "augmentation": {
         "type": "sequential",
@@ -226,14 +215,16 @@
               "type": "affine",
               "params": {
                 "scale": {
-                  "x": "(0.8, 1.2)",
-                  "y": "(0.8, 1.2)"
+                  "x": "(0.8, 1.1)",
+                  "y": "(0.8, 1.1)"
                 },
                 "translate_percent": {
                   "x": "(-0.3, 0.3)",
                   "y": "(-0.3, 0.3)"
                 },
-                "rotate": "[0.0, 90.0, 180.0, 270.0]"
+                "rotate": "[0.0, 90.0, 180.0, 270.0]",
+                "mode": "constant",
+                "cval":114.8
               }
             },
             {

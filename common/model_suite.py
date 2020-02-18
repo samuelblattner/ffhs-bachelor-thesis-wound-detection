@@ -18,7 +18,11 @@ from common.environment import Environment
 from config import ENVIRONMENT_ROOT, NET_MAP, DATASET_CLASS_MAP, FACTORY_MAP
 
 
-class ModelSuite:
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
+
+class WoundDetectionSuite:
     """
     Base class for model adapter to create and configure model instances.
     """
@@ -49,8 +53,9 @@ class ModelSuite:
         print('-- Using GPU {}'.format(self.env.gpu_no))
 
         self.__render_title()
+        self.env.prepare(load_data=False)
         self.model = self._create_adapter()
-        self.env.prepare()
+
         assert self.model is not None, 'Model failed to be created. Aborting...'
 
     def __render_title(self):
@@ -130,8 +135,6 @@ class ModelSuite:
         env.eval_heatmaps_overview = args.eval_heatmaps_overview
         env.eval_images = args.eval_images
         env.validate()
-        env.prepare()
-
         self.env = env
 
     def _create_adapter(self) -> AbstractModelAdapter:

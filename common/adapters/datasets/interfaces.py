@@ -179,6 +179,7 @@ class AbstractDataset:
         # Create dataset instances
         train_dataset = cls(dataset_path=train_dataset_path, **kwargs)
 
+        train_image_ids = None
         kwargs.pop('augmentation')
         val_dataset = cls(val_dataset_path or train_dataset_path, **kwargs)
         test_dataset = cls(test_dataset_path or train_dataset_path, **kwargs)

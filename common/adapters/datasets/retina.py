@@ -227,7 +227,7 @@ class RetinaDataset(AbstractDataset, Generator):
 
             # Uncomment for DEBUG
             # ==========================
-            # ==========================
+            # # ==========================
             # if self.is_training_dataset:
             #     draw = image.copy()
             #
@@ -261,7 +261,7 @@ class RetinaDataset(AbstractDataset, Generator):
             #     Image.fromarray(draw.astype('uint8')).save('train_images/{}.png'.format(randint(0, 1000)))
             #     # with open('train_images/{}.png'.format(randint(0, 1000)), 'wb') as f:
             #     #     fig.savefig(f, format='png')
-            #
+
             #     # exit(0)
             # ==========================
             # ==========================

@@ -227,6 +227,8 @@ class WoundDetectionSuite:
                 fullsize_fig, fullsize_axs = plt.subplots(1, 1, figsize=(20, 20))
 
             for i, image_info in enumerate(test_dataset.get_image_info()):
+
+                print(i, test_dataset.size())
                 raw_image = test_dataset.load_image(i)
                 dets = self.model.predict([raw_image], min_score)[0]
 
@@ -241,6 +243,12 @@ class WoundDetectionSuite:
                 if not annotations_loaded.get(i, False):
 
                     for box, label in zip(mask_data, label_data):
+                        initial_width = raw_image.shape[1]
+                        indicated_initial_width = image_info['width']
+                        indicated_initial_height = image_info['height']
+
+                        box = np.multiply(box, initial_width / indicated_initial_width)
+
                         all_annotations[i][int(label)].append(box)
 
                     annotations_loaded[i] = True

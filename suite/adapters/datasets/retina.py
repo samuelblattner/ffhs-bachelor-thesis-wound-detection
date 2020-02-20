@@ -11,8 +11,8 @@ from neural_nets.retina_net.keras_retinanet.preprocessing.generator import Gener
 from neural_nets.retina_net.keras_retinanet.utils.anchors import anchor_targets_bbox, guess_shapes
 from neural_nets.retina_net.keras_retinanet.utils.image import TransformParameters, preprocess_image
 
-from common.adapters.datasets.interfaces import AbstractDataset
-from common.utils.images import draw_box
+from suite.adapters.datasets.interfaces import AbstractDataset
+from suite.utils.images import draw_box
 
 
 class RetinaDataset(AbstractDataset, Generator):

@@ -9,9 +9,9 @@ from os.path import join
 
 from imgaug.parameters import Clip, Normal, Add, Absolute
 
-from common.adapters.datasets.interfaces import AbstractDataset
-from common.adapters.datasets.union import UnionDataset
-from common.enums import NeuralNetEnum, ModelPurposeEnum
+from suite.adapters.datasets.interfaces import AbstractDataset
+from suite.adapters.datasets.union import UnionDataset
+from suite.enums import NeuralNetEnum, ModelPurposeEnum
 from neural_nets.retina_net.keras_retinanet.preprocessing.generator import Generator
 
 DEFAULT_DATASET_ROOT = join('/home/blsa/projects/confidential/wound-detection/data/',)
@@ -255,6 +255,7 @@ class Environment:
     def prepare(self, i=0, load_data: bool = True):
         if not self.valid:
             self.validate()
+
 
         xval_iter = 0
         max_xval_iter = self.k_fold_x_val if self.auto_xval else 1

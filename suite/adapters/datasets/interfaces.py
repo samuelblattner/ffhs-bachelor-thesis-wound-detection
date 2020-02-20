@@ -13,7 +13,7 @@ from PIL import Image, ImageDraw
 from imgaug import BoundingBoxesOnImage, BoundingBox
 from imgaug.augmenters import Augmenter, CropToFixedSize
 from neural_nets.retina_net.keras_retinanet.utils.image import resize_image as retina_resize_image
-from common.utils.images import resize_image, resize_mask, extract_bboxes
+from suite.utils.images import resize_image, resize_mask, extract_bboxes
 
 
 class AbstractDataset:
@@ -175,6 +175,7 @@ class AbstractDataset:
         :return: A tuple containing training, validation and test dataset
         :rtype Tuple[Dataset, Dataset, Dataset]
         """
+
 
         # Create dataset instances
         train_dataset = cls(dataset_path=train_dataset_path, **kwargs)

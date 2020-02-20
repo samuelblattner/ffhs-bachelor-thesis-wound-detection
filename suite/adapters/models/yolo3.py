@@ -6,11 +6,11 @@ from keras.callbacks import Callback, ModelCheckpoint
 import tensorflow as tf
 from keras.optimizers import Adam
 
-from common.adapters.datasets.interfaces import AbstractDataset
-from common.adapters.models.interfaces import AbstractModelAdapter
-from common.detection import Detection
-from common.enums import ModelPurposeEnum
-from common.environment import Environment
+from suite.adapters.datasets.interfaces import AbstractDataset
+from suite.adapters.models.interfaces import AbstractModelAdapter
+from suite.detection import Detection
+from suite.enums import ModelPurposeEnum
+from suite.environment import Environment
 from neural_nets.yolo_3.train import create_callbacks
 from neural_nets.yolo_3.utils.multi_gpu_model import multi_gpu_model
 from neural_nets.yolo_3.utils.utils import get_yolo_boxes

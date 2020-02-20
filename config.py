@@ -1,14 +1,14 @@
 from os.path import join
 
-# from common.adapters.datasets.frcnn import FRCNNDataset
-from common.adapters.datasets.retina import RetinaDataset
-from common.adapters.datasets.yolo3 import Yolo_3Dataset
-# from common.adapters.models.frcnn import FRCNNAdapter
-from common.enums import NeuralNetEnum
-from common.adapters.models.retina import RetinaResnet50Adapter, RetinaResnet101Adapter, RetinaResnet152Adapter, RetinaDensenet121Adapter, \
+# from suite.adapters.datasets.frcnn import FRCNNDataset
+from suite.adapters.datasets.retina import RetinaDataset
+from suite.adapters.datasets.yolo3 import Yolo_3Dataset
+# from suite.adapters.models.frcnn import FRCNNAdapter
+from suite.enums import NeuralNetEnum
+from suite.adapters.models.retina import RetinaResnet50Adapter, RetinaResnet101Adapter, RetinaResnet152Adapter, RetinaDensenet121Adapter, \
     RetinaDensenet169Adapter, RetinaDensenet201Adapter, RetinaMobilenet128Adapter, RetinaMobilenet160Adapter, RetinaMobilenet192Adapter, \
     RetinaMobilenet224Adapter, RetinaVGG16Adapter, RetinaVGG19Adapter
-from common.adapters.models.yolo3 import Yolo3Adapter
+from suite.adapters.models.yolo3 import Yolo3Adapter
 
 ENVIRONMENT_ROOT = join('environments')
 

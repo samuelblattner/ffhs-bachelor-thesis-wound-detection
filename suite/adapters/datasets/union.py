@@ -2,7 +2,7 @@ from itertools import chain
 from typing import List, Union, Tuple
 import numpy as np
 
-from common.adapters.datasets.interfaces import AbstractDataset
+from suite.adapters.datasets.interfaces import AbstractDataset
 from neural_nets.retina_net.keras_retinanet.preprocessing.generator import Generator
 from neural_nets.retina_net.keras_retinanet.utils.anchors import anchor_targets_bbox, guess_shapes
 from neural_nets.retina_net.keras_retinanet.utils.image import TransformParameters, preprocess_image

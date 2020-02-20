@@ -2,6 +2,7 @@ import os
 import re
 import sys
 from abc import ABCMeta, abstractmethod
+from logging import Logger
 from os.path import join
 from typing import Tuple, List
 
@@ -11,9 +12,9 @@ from tensorflow.python.keras import Model
 from keras.callbacks import EarlyStopping, ModelCheckpoint, Callback
 from keras.callbacks import TensorBoard
 
-from common.detection import Detection
-from common.enums import ModelPurposeEnum
-from common.environment import Environment
+from suite.detection import Detection
+from suite.enums import ModelPurposeEnum
+from suite.environment import Environment
 
 
 class AbstractModelAdapter:
@@ -28,18 +29,28 @@ class AbstractModelAdapter:
     #: Environment for training and prediction
     env: Environment = None
 
-    def __init__(self, environment: Environment):
+    #: Logging
+    _logger: Logger = None
+
+    def __init__(self, environment: Environment, num_classes: int, logger: Logger = Logger('error', 'ERROR'), checkpoint_path: str = None):
+        self._logger = logger
         self.env = environment
-        self.train_model, self.inference_model = self.build_models()
-        self.load_latest_checkpoint()
+
+        tf_learning: bool = False
+        frozen_bb: bool = True
+
+        if self.env:
+            self._logger.info('---- Use Transfer Learning: {}'.format(self.env.use_transfer_learning))
+            self._logger.info('---- Backbone is frozen: {}'.format(not self.env.allow_base_layer_training))
+            tf_learning = self.env.use_transfer_learning
+            frozen_bb = not self.env.allow_base_layer_training
+
+        self.train_model, self.inference_model = self.build_models(num_classes, tf_learning, frozen_bb)
+        self.load_latest_checkpoint(checkpoint_path)
 
     @property
     def full_name(self) -> str:
         return '{}--{}'.format(self.env.name, self.get_name()).replace(' ', '_')
-
-    @property
-    def num_classes(self) -> int:
-        return 2 if self.env.simplify_classes else 13
 
     def find_last(self):
         """Finds the last checkpoint file of the last trained model in the
@@ -79,7 +90,7 @@ class AbstractModelAdapter:
         some layers from loading.
         exclude: list of layer names to exclude
         """
-        print('--> Loading weights from ', filepath)
+        self._logger.info('---- Loading model weights from {}'.format(filepath))
         import h5py
         # Conditional import to support versions of Keras before 2.2
         # TODO: remove in about 6 months (end of 2018)
@@ -100,8 +111,8 @@ class AbstractModelAdapter:
 
         # In multi-GPU training, we wrap the model. Get layers
         # of the inner model because they have the weights.
-        print('Loading weights for ', 'train ' if self.env.purpose == ModelPurposeEnum.TRAINING else 'inference')
-        keras_model = self.train_model if self.env.purpose == ModelPurposeEnum.TRAINING else self.inference_model
+        print('Loading weights for ', 'train ' if self.env and self.env.purpose == ModelPurposeEnum.TRAINING else 'inference')
+        keras_model = self.train_model if self.env and self.env.purpose == ModelPurposeEnum.TRAINING else self.inference_model
 
         layers = keras_model.inner_model.layers if hasattr(keras_model, "inner_model") \
             else keras_model.layers
@@ -123,10 +134,10 @@ class AbstractModelAdapter:
         checkpoint_latest_path = join(checkpoint_dir_path, "{}_latest.h5".format(self.full_name))
         return checkpoint_dir_path, checkpoint_path, checkpoint_latest_path
 
-    def load_latest_checkpoint(self):
+    def load_latest_checkpoint(self, path: str):
 
         try:
-            last_checkpoint = self.find_last()
+            last_checkpoint = path or self.find_last()
             self.load_weights(last_checkpoint, by_name=True)
             regex = r".*(\d{4})\.h5"
             m = re.match(regex, last_checkpoint)
@@ -142,7 +153,8 @@ class AbstractModelAdapter:
         except StopIteration:
             pass
         except BaseException as e:
-            print(e)
+            self._logger.critical(e)
+            exit(1)
 
     def get_callbacks(self, loss_patience=15, val_loss_patience=30) -> List[Callback]:
 
@@ -233,7 +245,7 @@ class AbstractModelAdapter:
         raise NotImplementedError()
 
     @abstractmethod
-    def build_models(self) -> Tuple[Model, Model]:
+    def build_models(self, num_classes, transfer_learning: bool, freeze_backbone: bool) -> Tuple[Model, Model]:
         raise NotImplementedError()
 
     @abstractmethod

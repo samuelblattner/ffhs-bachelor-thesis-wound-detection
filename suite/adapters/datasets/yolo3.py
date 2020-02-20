@@ -6,8 +6,8 @@ from imgaug.augmenters import Augmenter
 import numpy as np
 from utils.utils import normalize
 
-from common.adapters.datasets.interfaces import AbstractDataset
-from common.utils.images import draw_box
+from suite.adapters.datasets.interfaces import AbstractDataset
+from suite.utils.images import draw_box
 from neural_nets.retina_net.keras_retinanet.preprocessing.generator import Generator
 from neural_nets.retina_net.keras_retinanet.utils.anchors import anchor_targets_bbox, guess_shapes
 from neural_nets.retina_net.keras_retinanet.utils.image import TransformParameters, preprocess_image

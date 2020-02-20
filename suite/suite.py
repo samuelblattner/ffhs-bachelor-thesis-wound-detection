@@ -2,7 +2,19 @@ import argparse
 import os
 import re
 import sys
+from logging import Logger
 from os.path import join
+
+import warnings
+
+import configparser
+from typing import List
+
+from suite.detection import Detection
+
+warnings.filterwarnings('ignore', category=FutureWarning)
+
+
 
 import cv2
 import numpy as np
@@ -12,20 +24,23 @@ from neural_nets.retina_net.keras_retinanet.utils.compute_overlap import compute
 from neural_nets.retina_net.keras_retinanet.utils.eval import _compute_ap
 from neural_nets.retina_net.keras_retinanet.utils.visualization import draw_box
 
-from common.adapters.models.interfaces import AbstractModelAdapter
-from common.enums import ModelPurposeEnum
-from common.environment import Environment
+from suite.adapters.models.interfaces import AbstractModelAdapter
+from suite.enums import ModelPurposeEnum
+from suite.environment import Environment
 from config import ENVIRONMENT_ROOT, NET_MAP, DATASET_CLASS_MAP, FACTORY_MAP
 
 
-import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 
 class WoundDetectionSuite:
     """
-    Base class for model adapter to create and configure model instances.
+    Wound Detection Suite for wound detection
     """
+
+    ACTIONS = (
+        'detect',
+    )
 
     #: Model to be used
     model: AbstractModelAdapter = None
@@ -33,21 +48,50 @@ class WoundDetectionSuite:
     #: Environment to be used around the model
     env: Environment = None
 
+    # Control
+    # =======
+    __action: str = None
+
+    # Config
+    # ======
+    __config = None
+
+    # Logging
+    # =======
+    __logger: Logger = None
+
+
     start_from_xval_k: int = None
 
-    def __init__(self):
+    def __init__(self, logger: Logger = Logger('erroronly', 'ERROR')):
         """
         Initialize the suite.
         """
+        self.__logger = logger
         self.__setup()
+        # self.__legacy_setup()
 
     def __setup(self):
+        """
+        Sets up the suite by loading the config from ini file and
+        parsing cli arguments.
+        """
+        self.__load_config()
+
+    def __load_config(self):
+        """
+        Loads config from the ini file.
+        :return:
+        """
+        self.__config = configparser.ConfigParser()
+        self.__config.read('config.ini')
+
+    def __legacy_setup(self):
         """
         Sets up the suite to be ready for training, inference or evaluation.
         Parses cli args, uses them to inflate the environment and to create and initialize
         the model to be used.
         """
-        args = self._parse_args()
         self._inflate_environment(args)
         os.environ["CUDA_VISIBLE_DEVICES"] = "{}".format(self.env.gpu_no)
         print('-- Using GPU {}'.format(self.env.gpu_no))
@@ -58,48 +102,6 @@ class WoundDetectionSuite:
 
         assert self.model is not None, 'Model failed to be created. Aborting...'
 
-    def __render_title(self):
-
-        title = 'Full body wound detection'
-
-        sys.stdout.write(
-            '\n\n{}\n'
-            '* {} *\n'
-            '{}\n\n'.format(
-                '*' * (len(title) + 4),
-                title,
-                '*' * (len(title) + 4)
-            )
-        )
-
-    def _parse_args(self):
-        """
-        Parse CLI arguments.
-        :return: Parsed Arguments
-        """
-        parser = argparse.ArgumentParser(description='Wound detection suite')
-        parser.add_argument('--purpose', help='Purpose for the net. Choose from "train", "predict" and "evaluate".', default='train', type=str, required=True)
-        parser.add_argument('--env', help='Name of environment.', type=str, required=True)
-        parser.add_argument('--net_type', help='Type of the neural net. Choose from: {}.'.format(', '.join(['"{}"'.format(key) for key in NET_MAP.keys()])),
-                            default='mrcnn', type=str, required=True)
-        parser.add_argument('--checkpoint_dir', help='Directory where model checkpoints are stored. Default: ./checkpoints.', default='./checkpoints', type=str,
-                            required=False)
-        parser.add_argument('--data_dir', help='Base directory for datasets. Default: ./data', default='./data', type=str, required=False)
-        parser.add_argument('--eval_dir', help='Evaluation directory', default='./evaluation', type=str, required=False)
-        parser.add_argument('--eval_name_suffix', help='Evaluation file name suffix', default=None, type=str, required=False)
-        parser.add_argument('--eval_heatmaps', help='Stores and displays evaluation heatmaps if enabled', default=False, required=False, action='store_true')
-        parser.add_argument('--eval_heatmaps_overview', help='Stores and displays evaluation heatmaps overview if enabled', default=False, required=False,
-                            action='store_true')
-        parser.add_argument('--eval_images', help='Stores and displays evaluation images if enabled', default=False, required=False, action='store_true')
-        parser.add_argument('--full_size_eval', help='Full Size Eval', default=False, type=bool, required=False)
-        parser.add_argument('--gpu_no', help='GPU no', default=0, type=int, required=False)
-        parser.add_argument('--batch_size', help='Batch Size', default=None, type=int, required=False)
-        parser.add_argument('--start_from_xval_k', help='Start from xval k', default=None, type=int, required=False)
-        parser.add_argument('--loss_patience', help='Loss Patience', default=15, type=int, required=False)
-        parser.add_argument('--val_loss_patience', help='Val Loss Patience', default=30, type=int, required=False)
-        parser.add_argument('--verbose', help='Vebose', default=False, type=bool, required=False)
-
-        return parser.parse_args(sys.argv[1:])
 
     def _inflate_environment(self, args):
         """
@@ -152,19 +154,33 @@ class WoundDetectionSuite:
 
         return FACTORY_MAP.get(self.env.neural_net_type)(self.env)
 
+    def __create_model_adapter(self, name: str) -> AbstractModelAdapter:
+        """
+        Creates a model
+        :param name: Name of a model
+        :return: Model Adapter
+        """
+
+        if name not in NET_MAP:
+            self.__logger.error('Model with name "{}" is not implemented. Please choose one of: {}'.format(
+                name, list(NET_MAP.keys())
+            ))
+            exit(1)
+
+        self.__logger.info('---- Creating model {}'.format(name))
+        num_classes = (2 if self.env.simplify_classes else 14) if self.env else int(self.__config['DETECTION_MODEL']['num_classes'])
+        checkpoint_path = None if self.env else join(self.__config['PATHS']['weights'], self.__config['DETECTION_MODEL']['weights_name'])
+        return FACTORY_MAP.get(NET_MAP.get(name))(None, num_classes=num_classes, logger=self.__logger, checkpoint_path=checkpoint_path)
+
     def _train(self):
         print('Use Transfer Learning: ', self.env.use_transfer_learning)
         self.model.train(start_from_xval_k=self.start_from_xval_k, loss_patience=self.loss_patience, val_loss_patience=self.val_loss_patience)
 
     def _predict(self):
-
-        _, __, evaluation_dataset = self.env.get_datasets()
-
-        img = np.array(Image.open('images/jasonstatham.jpg'), dtype=np.float32)
-        # img = np.array(Image.open('images/caldrogo.jpg'), dtype=np.float32)
-        img = evaluation_dataset.load_image(0)
-        # img = __.load_image(0)
-        # img = _.load_image(1)
+        """
+        Predicts
+        :return:
+        """
 
         detections = self.model.predict([img])
         draw = img.copy()
@@ -237,6 +253,8 @@ class WoundDetectionSuite:
 
                 if self.env.eval_heatmaps:
                     self.model.generate_inference_heatmaps(raw_image, [fullsize_axs])
+                    print('plot')
+                    plt.show()
 
                 mask_data, label_data = test_dataset.load_mask(i, True)
 
@@ -453,13 +471,82 @@ class WoundDetectionSuite:
 
             # return out
 
-    def execute(self):
+    def __get_image_file_generator(self, path):
         """
-        Run the suit with the purpose it was created for.
+        Returns a generator yielding files.
+        :param path: Either path to a file or directory
+        :type path: str
+        :return: Generator
+        :rtype: Generator
         """
-        if self.env.purpose == ModelPurposeEnum.TRAINING:
-            self._train()
-        elif self.env.purpose == ModelPurposeEnum.PREDICTION:
-            self._predict()
+
+        EXTENSIONS = (
+            'jpg', 'png', 'bmp',
+        )
+
+        def gen():
+
+            if os.path.isdir(path):
+                for cur_path, dirs, files in os.walk(path):
+                    for file in files:
+                        print(file)
+                        for ext in EXTENSIONS:
+                            if ext in file.lower():
+                                yield join(cur_path, file)
+                                break
+
+            else:
+                yield path
+
+        return gen()
+
+    def apply_detections(self, image: np.array, detections: List[Detection]):
+        for detection in detections:
+            box = detection.bbox
+            draw_box(image, box, color=(23, 245, 255))
+
+            caption = "{}".format('gür')
+            cv2.putText(
+                img=image,
+                text=caption,
+                org=(int(box[0]), int(box[1]) - 10),
+                fontFace=cv2.FONT_HERSHEY_PLAIN,
+                fontScale=2,
+                color=(32, 245, 255),
+                thickness=3)
+
+    def detect(self, path: str, out_dir: str, show: bool = False):
+        """
+        Run wound detection
+        """
+
+        self.__logger.info('-- Running detection...')
+
+        model_adapter = self.__create_model_adapter(self.__config['DETECTION_MODEL']['model'])
+
+        if os.path.isdir(path):
+            self.__logger.info('---- Looking for image files in {}'.format(os.path.abspath(path)))
+
+        images_processed = 0
+        for image_file in self.__get_image_file_generator(path):
+
+            self.__logger.info('---- Loading image {}'.format(image_file))
+            img = Image.open(image_file)
+            img = np.array(img, dtype=np.float32)
+
+            detections = model_adapter.predict([img])
+
+            print(detections)
+            out_dir = out_dir or os.path.abspath(os.path.dirname(image_file))
+            if out_dir:
+                draw_image = img.copy()
+                self.apply_detections(draw_image, detections[0])
+
+                Image.fromarray(draw_image.astype('uint8')).save(join(out_dir, 'det.jpg'))
+
+            images_processed += 1
+
+        if images_processed == 0:
+            self.__logger.warning('---- No image files found!')
         else:
-            self._evaluate()
+            self.__logger.info('---- {} images processed. Goodbye.'.format(images_processed))

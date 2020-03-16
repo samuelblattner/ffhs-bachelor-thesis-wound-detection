@@ -1,0 +1,24 @@
+{
+  "name": "1020 Close Up Wounds",
+  "description": "Default Network Configurations using Transfer Learning and Image Augmentation on Close Up Wounds Dataset",
+  "batch_size": 5,
+  "max_epochs": 1000,
+  "shuffle_dataset": true,
+  "shuffle_seed": 0,
+  "simplify_classes": true,
+  "use_transfer_learning": true,
+  "allow_base_layer_training": false,
+  "k_fold_x_val": 4,
+  "x_val_k": "auto",
+  "x_val_ignore_dataset": true,
+  "datasets": [
+    {
+      "name": "puppet_measure_bands",
+      "split": [
+        0.67,
+        0.165,
+        0.165
+      ]
+    }
+  ]
+}

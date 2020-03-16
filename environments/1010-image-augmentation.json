@@ -42,7 +42,7 @@
                         "other_param": {
                           "type": "Normal",
                           "params": {
-                            "loc": 1.0,
+                            "loc": 0.0,
                             "scale": 4.0
                           }
                         }

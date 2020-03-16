@@ -25,6 +25,8 @@ printf 'done.'
 
 printf '\nBuilding cython modules...'
 cd neural_nets/retina_net && python setup.py build_ext --inplace > /dev/null 2>&1
+cd ..
+cd ..
 printf 'done.'
 
 printf '\n\e[32mSetup complete ✓ \e[m\n\n'

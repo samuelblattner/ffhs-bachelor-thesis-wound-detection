@@ -84,7 +84,7 @@ class BaseRetinaAdapter(AbstractModelAdapter):
             scaled_images.append(image[:, remove:image.shape[1] - remove, :])
 
         images = np.array(scaled_images)
-        boxes, scores, labels, regression = self.inference_model.predict_on_batch(images)
+        boxes, scores, labels = self.inference_model.predict_on_batch(images)
 
         detections = [[] * images.shape[0]]
         for i in range(images.shape[0]):

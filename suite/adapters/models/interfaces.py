@@ -4,7 +4,7 @@ import sys
 from abc import ABCMeta, abstractmethod
 from logging import Logger
 from os.path import join
-from typing import Tuple, List
+from typing import Tuple, List, Generator
 
 import numpy as np
 
@@ -13,7 +13,7 @@ from keras.callbacks import EarlyStopping, ModelCheckpoint, Callback
 from keras.callbacks import TensorBoard
 
 from suite.detection import Detection
-from suite.enums import ModelPurposeEnum
+from suite.enums import SuiteActionEnum
 from suite.environment import Environment
 
 
@@ -29,23 +29,31 @@ class AbstractModelAdapter:
     #: Environment for training and prediction
     env: Environment = None
 
+    _classes: List[str]
+
     #: Logging
     _logger: Logger = None
 
-    def __init__(self, environment: Environment, num_classes: int, logger: Logger = Logger('error', 'ERROR'), checkpoint_path: str = None):
+    def __init__(self,
+                 environment: Environment, classes: List[str], logger: Logger = Logger('error', 'ERROR'),
+                 checkpoint_root: str = None, checkpoint_path: str = None):
+
         self._logger = logger
         self.env = environment
 
         tf_learning: bool = False
         frozen_bb: bool = True
+        self.checkpoint_root: str = checkpoint_root
+
+        self._classes = classes
 
         if self.env:
-            self._logger.info('---- Use Transfer Learning: {}'.format(self.env.use_transfer_learning))
-            self._logger.info('---- Backbone is frozen: {}'.format(not self.env.allow_base_layer_training))
+            self._logger.info('Use Transfer Learning: {}'.format(self.env.use_transfer_learning))
+            self._logger.info('Backbone is frozen: {}'.format(not self.env.allow_base_layer_training))
             tf_learning = self.env.use_transfer_learning
             frozen_bb = not self.env.allow_base_layer_training
 
-        self.train_model, self.inference_model = self.build_models(num_classes, tf_learning, frozen_bb)
+        self.train_model, self.inference_model = self.build_models(tf_learning, frozen_bb)
         self.load_latest_checkpoint(checkpoint_path)
 
     @property
@@ -58,10 +66,15 @@ class AbstractModelAdapter:
         Returns:
             The path of the last checkpoint file
         """
+
         # Get directory names. Each directory corresponds to a model
         checkpoint_dir_path, checkpoint_path, latest_checkpoint_path = self.get_checkpoint_location()
 
-        dir_names = next(os.walk(self.env.checkpoint_root))[1]
+        self._logger.info('\nLooking for latest weights for model {} in directory {}...'.format(
+            self.full_name, checkpoint_dir_path
+        ))
+
+        dir_names = next(os.walk(self.checkpoint_root))[1]
         key = self.full_name
         dir_names = filter(lambda f: f.startswith(key), dir_names)
         dir_names = sorted(dir_names)
@@ -71,7 +84,7 @@ class AbstractModelAdapter:
                 errno.ENOENT,
                 "Could not find model directory under {}".format(checkpoint_dir_path))
         # Pick last directory
-        dir_name = os.path.join(self.env.checkpoint_root, dir_names[-1])
+        dir_name = os.path.join(self.checkpoint_root, dir_names[-1])
         # Find the last checkpoint
         checkpoints = next(os.walk(dir_name))[2]
         checkpoints = filter(lambda f: f.startswith(self.full_name), checkpoints)
@@ -90,7 +103,9 @@ class AbstractModelAdapter:
         some layers from loading.
         exclude: list of layer names to exclude
         """
-        self._logger.info('---- Loading model weights from {}'.format(filepath))
+        self._logger.info('Loading {} model weights from {}...\n'.format(
+            'TRAINING' if self.env and self.env.purpose == SuiteActionEnum.TRAINING else 'INFERENCE',
+            filepath))
         import h5py
         # Conditional import to support versions of Keras before 2.2
         # TODO: remove in about 6 months (end of 2018)
@@ -111,8 +126,7 @@ class AbstractModelAdapter:
 
         # In multi-GPU training, we wrap the model. Get layers
         # of the inner model because they have the weights.
-        print('Loading weights for ', 'train ' if self.env and self.env.purpose == ModelPurposeEnum.TRAINING else 'inference')
-        keras_model = self.train_model if self.env and self.env.purpose == ModelPurposeEnum.TRAINING else self.inference_model
+        keras_model = self.train_model if self.env and self.env.purpose == SuiteActionEnum.TRAINING else self.inference_model
 
         layers = keras_model.inner_model.layers if hasattr(keras_model, "inner_model") \
             else keras_model.layers
@@ -129,7 +143,7 @@ class AbstractModelAdapter:
             f.close()
 
     def get_checkpoint_location(self) -> Tuple[str, str, str]:
-        checkpoint_dir_path = join(self.env.checkpoint_root, self.full_name)
+        checkpoint_dir_path = join(self.checkpoint_root, self.full_name)
         checkpoint_path = join(checkpoint_dir_path, "{}_{{epoch:04d}}.h5".format(self.full_name))
         checkpoint_latest_path = join(checkpoint_dir_path, "{}_latest.h5".format(self.full_name))
         return checkpoint_dir_path, checkpoint_path, checkpoint_latest_path
@@ -147,11 +161,11 @@ class AbstractModelAdapter:
                 # Epoch number in file is 1-based, and in Keras code it's 0-based.
                 # So, adjust for that then increment by one to start from the next epoch
                 self.train_model.epoch = int(m.group(1)) - 1 + 1
-                print('----> Re-starting from epoch %d' % self.train_model.epoch)
+                print('Re-starting from epoch %d' % self.train_model.epoch)
         except FileNotFoundError:
-            pass
+            self._logger.info('Did not find any weights :-(\n')
         except StopIteration:
-            pass
+            self._logger.info('Did not find any weights :-(\n')
         except BaseException as e:
             self._logger.critical(e)
             exit(1)
@@ -236,8 +250,52 @@ class AbstractModelAdapter:
                 callbacks=self.get_callbacks(loss_patience, val_loss_patience)
             )
 
+    def get_tile_generator(self, img: np.array, tile_size: int) -> Generator[Tuple[np.array, int, int], None, None]:
+
+        def gen():
+
+            tiled_img = img.copy()
+            height, width = img.shape[:2]
+
+            # if height < tile_size or width < tile_size:
+            #     self._logger.info('Skipping tiling for size {}x{}'.format(width, height))
+            #     yield tiled_img, 0, 0
+            #     return
+
+            cols = np.ceil(img.shape[1] / tile_size).astype('uint8')
+            rows = np.ceil(img.shape[0] / tile_size).astype('uint8')
+
+            self._logger.info('Subsampling image of size {}x{} into {} {}x{} tiles...'.format(
+                width, height,
+                cols * rows,
+                tile_size, tile_size
+            ))
+
+            tiled_img = np.pad(tiled_img, [(0, rows * tile_size - height), (0, cols * tile_size - width), (0, 0)])
+
+            for row in range(rows):
+                for col in range(cols):
+                    yield tiled_img[row * tile_size:(row + 1) * tile_size, col * tile_size: (col + 1) * tile_size, :], row * tile_size, col * tile_size,
+
+        return gen()
+
+    def tiled_predict(self, image: np.array, tile_size: int, min_score=0.5) -> List[Detection]:
+        detections = []
+        for tile, tx, ty in self.get_tile_generator(image, tile_size):
+
+            tile_detections = self.predict([tile], min_score)[0]
+            for detection in tile_detections:
+                detection.bbox[0] += ty
+                detection.bbox[2] += ty
+                detection.bbox[1] += tx
+                detection.bbox[3] += tx
+
+            detections += tile_detections
+
+        return detections
+
     @abstractmethod
-    def predict(self, images, min_score=0.5) -> List[List[Detection]]:
+    def predict(self, images, min_score=0.5, tile_size: int = None) -> List[List[Detection]]:
         raise NotImplementedError()
 
     @abstractmethod
@@ -249,5 +307,5 @@ class AbstractModelAdapter:
         raise NotImplementedError()
 
     @abstractmethod
-    def generate_inference_heatmaps(self, image: np.array, plots) -> np.array:
+    def generate_inference_heatmaps(self, image: np.array, plots) -> Generator:
         raise NotImplementedError()

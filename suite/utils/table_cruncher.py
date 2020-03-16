@@ -1,12 +1,12 @@
 import re
 import pandas as pd
-from common.utils.tables import TABLES
+from suite.utils.tables import TABLES
 
 
-LATEX_PRE = '\\begin{table}\n\t\\centering\n\t\\resizebox{\\textwidth}{!}{'
+LATEX_PRE = '\\begin{table}\n\t\\RawFloats\n\t\\centering\n\t\\resizebox{\\textwidth}{!}{'
 LATEX_POST = '}\label{{label}}\caption{{caption}) \%}\end{table}'
 
-LATEX_TABLE_PRE = '\\begin{table}\n\t\\centering\n\t\\resizebox{\\textwidth}{!}{\n'
+LATEX_TABLE_PRE = '\\begin{table}\n\t\\RawFloats\n\t\\centering\n\t\\resizebox{\\textwidth}{!}{\n'
 LATEX_TABLE_POST = '}\\end{table}'
 LATEX_PARBOX_PARBOX = '\t\\parbox{.5\\textwidth}{\n\t\t\\resizebox{0.5\\textwidth}{!}{%\n'
 LATEX_POST_PARBOX = '}%\n'
@@ -35,6 +35,8 @@ def f2is(x):
 
 
 if __name__ == '__main__':
+
+    maps = []
 
     pd.set_option('display.precision', 2)
     pd.set_option('display.float_format', '{:.2f}'.format)
@@ -102,6 +104,10 @@ if __name__ == '__main__':
                     target_table.iloc[iou * group_size + group_size - 1, :] = target_table.iloc[iou * group_size: iou * group_size + group_size - 1, :].mean(axis=0)
 
             target_table[('', 'mAP')] = target_table.iloc[:, target_table.columns.get_level_values(1) == 'AP'].mean(axis=1)
+            if 'test on Cases' in caption and calculate_group_average:
+                maps.append(
+                    (target_table[('', 'mAP')][14], caption)
+                )
             latex = '{table}'.format(
                 table=target_table.to_latex(
                     formatters=[f2is, f2p, f2p, None, f2p, f2is, f2p, f2p, None, f2p, f2pb]
@@ -126,3 +132,6 @@ if __name__ == '__main__':
 
             if t > 0 and (t + 1) % 12 == 0:
                 f.write('\clearpage')
+
+        mm = list(sorted(maps, key=lambda m: m[0], reverse=True))
+        print('\n'.join(['{}: {}'.format(m[0], m[1]) for m in mm]))

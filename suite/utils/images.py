@@ -1,5 +1,7 @@
+import os
 import warnings
 from distutils.version import LooseVersion
+from os.path import join
 from random import random
 
 import numpy as np

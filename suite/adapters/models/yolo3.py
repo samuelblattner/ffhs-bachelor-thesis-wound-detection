@@ -1,4 +1,5 @@
 import os
+from logging import Logger
 from typing import List, Tuple
 
 from keras import Model
@@ -9,7 +10,7 @@ from keras.optimizers import Adam
 from suite.adapters.datasets.interfaces import AbstractDataset
 from suite.adapters.models.interfaces import AbstractModelAdapter
 from suite.detection import Detection
-from suite.enums import ModelPurposeEnum
+from suite.enums import SuiteActionEnum
 from suite.environment import Environment
 from neural_nets.yolo_3.train import create_callbacks
 from neural_nets.yolo_3.utils.multi_gpu_model import multi_gpu_model
@@ -66,6 +67,7 @@ def create_model(
             class_scale         = class_scale
         )
 
+    template_model.summary()
     # load the pretrained weight if exists, otherwise load the backend weight only
     if os.path.exists(saved_weights_name):
         print("\nLoading pretrained weights.\n")
@@ -91,8 +93,8 @@ class Yolo3Adapter(AbstractModelAdapter):
 
     anchors = [4, 3, 7, 6, 9, 13, 13, 3, 14, 7, 17, 13, 25, 8, 30, 17, 119, 113]
 
-    def __init__(self, environment: Environment):
-        super(Yolo3Adapter, self).__init__(environment)
+    def __init__(self, env: Environment, classes: List[str], logger: Logger, checkpoint_root: str = None, checkpoint_path: str = None):
+        super(Yolo3Adapter, self).__init__(env, classes, logger, checkpoint_root, checkpoint_path)
 
     def get_name(self) -> str:
         return 'Yolo3'
@@ -101,7 +103,7 @@ class Yolo3Adapter(AbstractModelAdapter):
         self.train_model.epoch = 0
         super(Yolo3Adapter, self).load_latest_checkpoint()
 
-    def build_models(self) -> Tuple[Model, Model]:
+    def build_models(self, _, __) -> Tuple[Model, Model]:
 
         if self.env.max_image_side_length is None:
             self.env.max_image_side_length = 416
@@ -112,7 +114,7 @@ class Yolo3Adapter(AbstractModelAdapter):
         except:
             last = ''
         train_model, inference_model = create_model(
-            nb_class=self.num_classes,
+            nb_class=len(self._classes) + 1,
             anchors=self.anchors,
             max_box_per_image=30,
             max_grid=(self.env.max_image_side_length, self.env.max_image_side_length),
@@ -154,7 +156,7 @@ class Yolo3Adapter(AbstractModelAdapter):
         dir_name = os.path.join(self.env.checkpoint_root, dir_names[-1])
         # Find the last checkpoint
         checkpoints = next(os.walk(dir_name))[2]
-        checkpoints = filter(lambda f: f.startswith(self.full_name) and ('infer' not in f if self.env.purpose == ModelPurposeEnum.TRAINING else True),
+        checkpoints = filter(lambda f: f.startswith(self.full_name) and ('infer' not in f if self.env.purpose == SuiteActionEnum.TRAINING else True),
                              checkpoints)
         checkpoints = sorted(checkpoints)
         if not checkpoints:

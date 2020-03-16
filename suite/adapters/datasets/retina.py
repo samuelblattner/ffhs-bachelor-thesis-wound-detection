@@ -42,34 +42,14 @@ class RetinaDataset(AbstractDataset, Generator):
 
         images = [None] * num_items
 
-        # all_images = None
         sorted_images = [None] * num_items
-        # all_annotations = None
         sorted_annotations = [None] * num_items
-
-        # print('Combingin:')
-        # print('Received ', len(x_y_list), 'sources to combine')
 
         for x_y, global_img_indices_in_batch in x_y_list:
             image_batch, target_batch = x_y
             imgs, annos = target_batch[0], target_batch[1]
-
-            # if all_images is None:
-            #     all_images = imgs
-            # else:
-            #     all_images += imgs
-            #
-            # if all_annotations is None:
-            #     all_annotations = annos
-            # else:
-            #     all_annotations += annos
-            #
             for image, idx, im, anno in zip(image_batch, global_img_indices_in_batch, imgs, annos):
                 images[idx] = image
-                # print('----')
-                # print(anno.shape)
-                # print(im.shape)
-                # print('----2')
                 sorted_images[idx] = im
                 sorted_annotations[idx] = anno
 

@@ -11,7 +11,7 @@ from imgaug.parameters import Clip, Normal, Add, Absolute
 
 from suite.adapters.datasets.interfaces import AbstractDataset
 from suite.adapters.datasets.union import UnionDataset
-from suite.enums import NeuralNetEnum, ModelPurposeEnum
+from suite.enums import NeuralNetEnum, SuiteActionEnum
 from neural_nets.retina_net.keras_retinanet.preprocessing.generator import Generator
 
 DEFAULT_DATASET_ROOT = join('/home/blsa/projects/confidential/wound-detection/data/',)
@@ -98,7 +98,7 @@ class Environment:
     neural_net_type: NeuralNetEnum = NeuralNetEnum.MRCNN_RESNET50
 
     #: Purpose of the net to be created
-    purpose: ModelPurposeEnum = ModelPurposeEnum.TRAINING
+    purpose: SuiteActionEnum = SuiteActionEnum.TRAINING
 
     #: Learning Rate
     learning_rate: float = 0.0001
@@ -373,7 +373,7 @@ class Environment:
         #     raise ValueError('Please specify a max image side number of >= 1. Current value is: {}'.format(self.max_image_side_length))
 
         # Check datasets
-        if self.purpose == ModelPurposeEnum.TRAINING:
+        if self.purpose == SuiteActionEnum.TRAINING:
             if len(self.datasets) <= 0 and self.train_dataset_name is None:
                 raise ValueError('Please specify at least a training dataset name if you intend to train the model.')
 
@@ -391,7 +391,7 @@ class Environment:
             raise ValueError('Expected split ratios to add up to 1, but sum was {sum}. Please make sure the train, val, test ratios add up to 1!'.format(
                 sum=sum(self.dataset_split)))
 
-        if self.purpose not in ModelPurposeEnum:
+        if self.purpose not in SuiteActionEnum:
             raise ValueError('Field \'purpose\' contains an invalid value. Please use the ModelPurposeEnum to assign a value!')
 
         # Check augmentation

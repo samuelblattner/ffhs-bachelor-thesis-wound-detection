@@ -1,13 +1,14 @@
 from enum import Enum
 
 
-class ModelPurposeEnum(Enum):
+class SuiteActionEnum(Enum):
     """
     Distinction required to generate the model accordingly
     """
     TRAINING = 'Training'
     PREDICTION = 'Prediction'
     EVALUATION = 'Evaluation'
+    ANONYMIZE = 'Anonymize'
 
 
 class NeuralNetEnum(Enum):

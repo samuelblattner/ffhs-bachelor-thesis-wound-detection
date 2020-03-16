@@ -1,7 +1,10 @@
-import argparse
+from matplotlib import pyplot as plt
+from PIL import Image
+import cv2
+import numpy as np
 import os
 import re
-import sys
+
 from logging import Logger
 from os.path import join
 
@@ -14,18 +17,11 @@ from suite.detection import Detection
 
 warnings.filterwarnings('ignore', category=FutureWarning)
 
-
-
-import cv2
-import numpy as np
-from PIL import Image
-from matplotlib import pyplot as plt
 from neural_nets.retina_net.keras_retinanet.utils.compute_overlap import compute_overlap
 from neural_nets.retina_net.keras_retinanet.utils.eval import _compute_ap
-from neural_nets.retina_net.keras_retinanet.utils.visualization import draw_box
 
 from suite.adapters.models.interfaces import AbstractModelAdapter
-from suite.enums import ModelPurposeEnum
+from suite.enums import SuiteActionEnum
 from suite.environment import Environment
 from config import ENVIRONMENT_ROOT, NET_MAP, DATASET_CLASS_MAP, FACTORY_MAP
 
@@ -48,6 +44,9 @@ class WoundDetectionSuite:
     #: Environment to be used around the model
     env: Environment = None
 
+    # Model
+    # =====
+
     # Control
     # =======
     __action: str = None
@@ -55,28 +54,40 @@ class WoundDetectionSuite:
     # Config
     # ======
     __config = None
+    __min_detection_score = 0.5
+    __iou_thresholds = (0.1, 0.25, 0.5, 0.75, 0.9, 0.95)
+
+    start_from_xval_k: int = None
 
     # Logging
     # =======
     __logger: Logger = None
 
-
-    start_from_xval_k: int = None
-
-    def __init__(self, logger: Logger = Logger('erroronly', 'ERROR')):
+    def __init__(self, action: SuiteActionEnum, model: str = None, logger: Logger = Logger('erroronly', 'ERROR'),
+                 weights: str = None, env: str = None, batch_size: int = None, checkpoint_dir: str = None,
+                 data_dir: str = None, gpu_no: int = None):
         """
         Initialize the suite.
         """
         self.__logger = logger
-        self.__setup()
-        # self.__legacy_setup()
-
-    def __setup(self):
-        """
-        Sets up the suite by loading the config from ini file and
-        parsing cli arguments.
-        """
         self.__load_config()
+        if env:
+            self.env = self._inflate_environment(env, action)
+
+        if model:
+            self.__config['DETECTION_MODEL']['model'] = model
+        if batch_size:
+            self.__config['TRAINING']['batch_size'] = batch_size
+        if checkpoint_dir:
+            self.__config['PATHS']['checkpoints'] = checkpoint_dir
+        if data_dir:
+            self.__config['PATHS']['data'] = data_dir
+        if self.env:
+            self.env.data_root = self.__config['PATHS']['data']
+        if gpu_no is not None:
+            self.__config['PATHS']['gpu_no'] = gpu_no
+
+        self.model_adapter = self.__create_model_adapter(self.__config['DETECTION_MODEL']['model'], self.env, weights)
 
     def __load_config(self):
         """
@@ -84,60 +95,39 @@ class WoundDetectionSuite:
         :return:
         """
         self.__config = configparser.ConfigParser()
+        self.__config['DETECTIONS'] = {
+            'detection_color': '255, 0, 0',
+            'annotation_color': '0, 0, 255',
+            'classes': 'Sharp Force, Blunt Force, Background'
+        }
+        self.__config['TRAINING'] = {
+            'loss_patience': 15,
+            'val_loss_patience': 30,
+            'batch_size': 20
+        }
+
         self.__config.read('config.ini')
 
-    def __legacy_setup(self):
-        """
-        Sets up the suite to be ready for training, inference or evaluation.
-        Parses cli args, uses them to inflate the environment and to create and initialize
-        the model to be used.
-        """
-        self._inflate_environment(args)
-        os.environ["CUDA_VISIBLE_DEVICES"] = "{}".format(self.env.gpu_no)
-        print('-- Using GPU {}'.format(self.env.gpu_no))
-
-        self.__render_title()
-        self.env.prepare(load_data=False)
-        self.model = self._create_adapter()
-
-        assert self.model is not None, 'Model failed to be created. Aborting...'
-
-
-    def _inflate_environment(self, args):
+    def _inflate_environment(self, env_name: str, purpose: SuiteActionEnum):
         """
         Creates an environment and inflates it with additional parameters
         from the command line.
         """
 
-        self.start_from_xval_k = args.start_from_xval_k
-        self.loss_patience = args.loss_patience
-        self.val_loss_patience = args.val_loss_patience
-
         # Load base arguments from json
-        env = Environment.from_json(join(ENVIRONMENT_ROOT, '{}.json'.format(args.env)))
+        env: Environment = Environment.from_json(join(ENVIRONMENT_ROOT, '{}.json'.format(env_name)))
 
-        if args.net_type not in NET_MAP:
-            raise ValueError('Unknown neural net type \'{net_type}\'. Please choose from: {available}'.format(
-                net_type=args.net_type,
-                available=', '.join(['"{}"'.format(key) for key in NET_MAP.keys()])
-            ))
-        if args.batch_size is not None:
-            env.batch_size = int(args.batch_size)
-        env.purpose = ModelPurposeEnum.TRAINING if args.purpose == 'train' else ModelPurposeEnum.PREDICTION if args.purpose == 'predict' else ModelPurposeEnum.EVALUATION
-        env.neural_net_type = NET_MAP.get(args.net_type)
-        env.dataset_class = DATASET_CLASS_MAP.get(env.neural_net_type)
-        env.checkpoint_root = args.checkpoint_dir
-        env.data_root = args.data_dir
-        env.img_scale_mode = 'just' if 'retina' in args.net_type else 'square'
-        env.evaluation_dir = args.eval_dir
-        env.eval_name_suffix = args.eval_name_suffix
-        env.gpu_no = args.gpu_no
-        env.full_size_eval = args.full_size_eval
-        env.eval_heatmaps = args.eval_heatmaps
-        env.eval_heatmaps_overview = args.eval_heatmaps_overview
-        env.eval_images = args.eval_images
+        if env.batch_size:
+            self.__config['TRAINING']['batch_size'] = str(env.batch_size)
+
+        env.dataset_class = DATASET_CLASS_MAP.get(
+            NET_MAP.get(self.__config['DETECTION_MODEL']['model'])
+        )
+        env.purpose = purpose
+
         env.validate()
         self.env = env
+        return env
 
     def _create_adapter(self) -> AbstractModelAdapter:
         """
@@ -154,7 +144,7 @@ class WoundDetectionSuite:
 
         return FACTORY_MAP.get(self.env.neural_net_type)(self.env)
 
-    def __create_model_adapter(self, name: str) -> AbstractModelAdapter:
+    def __create_model_adapter(self, name: str, env: Environment = None, weights: str = None) -> AbstractModelAdapter:
         """
         Creates a model
         :param name: Name of a model
@@ -167,49 +157,99 @@ class WoundDetectionSuite:
             ))
             exit(1)
 
-        self.__logger.info('---- Creating model {}'.format(name))
-        num_classes = (2 if self.env.simplify_classes else 14) if self.env else int(self.__config['DETECTION_MODEL']['num_classes'])
-        checkpoint_path = None if self.env else join(self.__config['PATHS']['weights'], self.__config['DETECTION_MODEL']['weights_name'])
-        return FACTORY_MAP.get(NET_MAP.get(name))(None, num_classes=num_classes, logger=self.__logger, checkpoint_path=checkpoint_path)
+        self.__logger.info('Creating model {}'.format(name))
+        classes = [c.strip() for c in self.__config['DETECTIONS']['classes'].split(',')]
+        checkpoint_path = weights if weights else None if self.env else join(self.__config['PATHS']['weights'],
+                                                                             self.__config['DETECTION_MODEL']['weights_name'])
+
+        return FACTORY_MAP.get(NET_MAP.get(name))(self.env, classes=classes, logger=self.__logger,
+                                                  checkpoint_root=self.__config['PATHS']['checkpoints'], checkpoint_path=checkpoint_path)
 
     def _train(self):
         print('Use Transfer Learning: ', self.env.use_transfer_learning)
         self.model.train(start_from_xval_k=self.start_from_xval_k, loss_patience=self.loss_patience, val_loss_patience=self.val_loss_patience)
 
-    def _predict(self):
+    def apply_detections(self, image: np.array, detections: List[Detection]):
         """
-        Predicts
+        Integrates a list of detections into an image visually.
+        Image is used per-reference, thus nothing is returned.
+
+        :param image: Image to write detections in
+        :type image: np.array
+        :param detections: List of detections to apply
+        :type detections: List[Detection]
+        """
+
+        smaller_side = min(image.shape[:2])
+        thickness = 2 + int(smaller_side / 1024)
+        text_thickness = 1 + int(smaller_side / 512)
+        font_size = 0.2 + smaller_side / 1000
+
+        text_padding = int(6 * smaller_side / 720)
+
+        for d, detection in enumerate(detections):
+            box = detection.bbox
+
+            if detection.score is not None:
+                color = [int(c) for c in self.__config['DETECTIONS']['detection_color'].split(',')]
+            else:
+                color = [int(c) for c in self.__config['DETECTIONS']['annotation_color'].split(',')]
+
+            font = cv2.FONT_HERSHEY_PLAIN
+            text = '{}: {}{}'.format(
+                d,
+                detection.class_name,
+                ' {:.2f}%'.format(
+                    detection.score * 100
+                ) if detection.score else ''
+            )
+
+            text_size = cv2.getTextSize(text, font, font_size, text_thickness)
+            text_width = text_size[0][0]
+            text_height = text_size[0][1]
+
+            # Draw text rectangle
+            cv2.rectangle(image, (box[0], box[1] - text_height - 2 * text_padding), (box[0] + text_width + 2 * text_padding, box[1]), color, -1)
+
+            # Draw object rectangle
+            cv2.rectangle(image, (box[0], box[1]), (box[2], box[3]), color, thickness, cv2.LINE_AA)
+            cv2.putText(
+                img=image,
+                text=text,
+                org=(box[0] + text_padding, box[1] - text_padding),
+                fontFace=font,
+                fontScale=font_size,
+                color=(255, 255, 255),
+                thickness=text_thickness)
+
+    def detect(self, on_images: np.array, weights: str = None, tile_size: int = None):
+        """
+        Run wound detection
+        """
+
+        # Run detections
+        if tile_size:
+            detections = [self.model_adapter.tiled_predict(on_images[0], tile_size=tile_size)]
+        else:
+            detections = self.model_adapter.predict(on_images)
+
+        self.__logger.info('-> Found {} wounds, hooray!'.format(len(detections[0])))
+        return detections
+
+    def get_heatmap_generator(self, img, h_idx):
+        return self.model_adapter.generate_inference_heatmaps(img, h_idx)
+
+    def evaluate(self, out_dir: str = None, eval_images: bool = False, name_suffix: str = None, tile_size: int = None):
+        """
+        Runs evaluation on a specific model / weights and calculates Precision, Recall, F1 and AP.
         :return:
         """
 
-        detections = self.model.predict([img])
-        draw = img.copy()
-
-        print('-------------')
-        print(len(detections[0]))
-
-        for det in detections[0]:
-            draw_box(draw, det.bbox, color=(255, 200, 0))
-
-            caption = "{} {:.3f}".format(det.class_name, det.score)
-            cv2.putText(
-                img=draw,
-                text=caption,
-                org=(int(det.bbox[0]), int(det.bbox[1]) + 10),
-                fontFace=cv2.FONT_HERSHEY_PLAIN,
-                fontScale=1,
-                color=(255, 200, 0),
-                thickness=2)
-
-        from matplotlib import pyplot as plt
-        plt.figure(figsize=(20, 20))
-        plt.axis('off')
-        plt.imshow(draw.astype(np.uint8))
-        plt.show()
-
-    def _evaluate(self):
-
         base_name = self.env.name
+        results = {}
+
+        if out_dir:
+            os.makedirs(out_dir, exist_ok=True)
 
         for ds, datasets in enumerate(self.env.iter_datasets()):
 
@@ -220,136 +260,78 @@ class WoundDetectionSuite:
             if self.env.auto_xval and self.env.x_val_auto_env_name:
                 self.env.name = re.sub(r'^(\d{4})', r'\1{}'.format('abcdefghijklmnopqrstuvwxyz'[ds]), base_name)
 
-            self.model = self._create_adapter()
+            self.model_adapter = self.__create_model_adapter(self.__config['DETECTION_MODEL']['model'], self.env)
 
             all_detections = [[[] for i in range(test_dataset.num_classes())] for j in range(test_dataset.size())]
             all_annotations = [[[] for i in range(test_dataset.num_classes())] for j in range(test_dataset.size())]
+
             average_precisions = {}
-            min_score = 0.5
-            iou_thresholds = (0.1, 0.25, 0.5, 0.75, 0.9, 0.95)
 
-            annotations_loaded = {}
-            out = {}
-            full_path = join(self.env.evaluation_dir, self.env.full_config_name)
-
-            # self.model.train_model[0].summary()
-            # self.model.train_model[1].summary()
+            full_path = join(out_dir, self.env.full_config_name)
             os.makedirs(full_path, exist_ok=True)
+            # Iterate over images and collect all annotations and
+            # detections, evaluate later
+            all_image_infos = test_dataset.get_image_info()
+            for image_idx, image_info in enumerate(all_image_infos):
 
-            if self.env.eval_heatmaps_overview:
-                fig, axs = plt.subplots(len(test_dataset.get_image_info()), 2, figsize=(10, 60))
+                raw_image = test_dataset.load_image(image_idx)
 
-            if self.env.eval_heatmaps:
-                fullsize_fig, fullsize_axs = plt.subplots(1, 1, figsize=(20, 20))
+                mask_data, label_data = test_dataset.load_mask(image_idx, True)
 
-            for i, image_info in enumerate(test_dataset.get_image_info()):
+                if tile_size:
+                    detections = self.model_adapter.tiled_predict(raw_image, tile_size=tile_size, min_score=self.__min_detection_score)
+                else:
+                    detections = self.model_adapter.predict([raw_image], self.__min_detection_score)[0]
 
-                print(i, test_dataset.size())
-                raw_image = test_dataset.load_image(i)
-                dets = self.model.predict([raw_image], min_score)[0]
+                annotations = []
 
-                if self.env.eval_heatmaps_overview:
-                    self.model.generate_inference_heatmaps(raw_image, axs[i, 1:])
+                for detection in detections:
+                    all_detections[image_idx][test_dataset.name_to_label(detection.class_name)].append(detection)
 
-                if self.env.eval_heatmaps:
-                    self.model.generate_inference_heatmaps(raw_image, [fullsize_axs])
-                    print('plot')
-                    plt.show()
+                for box, label in zip(mask_data, label_data):
+                    initial_width = raw_image.shape[1]
+                    indicated_initial_width = image_info['width']
 
-                mask_data, label_data = test_dataset.load_mask(i, True)
+                    # We check the actual image size against the image size indicated in the dataset
+                    # and scale the boxes if they don't match
+                    box = np.multiply(box, initial_width / indicated_initial_width)
 
-                if not annotations_loaded.get(i, False):
+                    annotation = Detection()
+                    annotation.bbox = [int(c) for c in box]
+                    annotation.score = None
+                    annotation.class_name = test_dataset.label_to_name(label)
+                    annotations.append(annotation)
+                    all_annotations[image_idx][int(label)].append(box)
 
-                    for box, label in zip(mask_data, label_data):
-                        initial_width = raw_image.shape[1]
-                        indicated_initial_width = image_info['width']
-                        indicated_initial_height = image_info['height']
+                if eval_images:
+                    self.apply_detections(raw_image, annotations)
+                    self.apply_detections(raw_image, detections)
+                    Image.fromarray(raw_image.astype('uint8')).save(
+                        join(full_path, '{}-{}{}.jpg'.format(
+                            self.model_adapter.full_name,
+                            '{}-'.format(name_suffix) if name_suffix else '',
+                            str(image_idx).zfill(4)
+                        ))
+                    )
 
-                        box = np.multiply(box, initial_width / indicated_initial_width)
+            # Run over all iou thresholds and calculate results
+            for iou_threshold in self.__iou_thresholds:
 
-                        all_annotations[i][int(label)].append(box)
+                results.setdefault(str(iou_threshold), {})
 
-                    annotations_loaded[i] = True
-
-                for det in dets:
-                    all_detections[i][test_dataset.name_to_label(det.class_name)].append(det)
-                    draw_box(raw_image, det.bbox, color=(255, 200, 0))
-
-                    caption = "{} {:.3f}".format(det.class_name, det.score)
-                    cv2.putText(
-                        img=raw_image,
-                        text=caption,
-                        org=(int(det.bbox[0]), int(det.bbox[1]) - 10),
-                        fontFace=cv2.FONT_HERSHEY_PLAIN,
-                        fontScale=2,
-                        color=(255, 200, 0),
-                        thickness=3)
-
-                for k, klass in enumerate(all_annotations[i]):
-                    for box in klass:
-                        draw_box(raw_image, box, color=(23, 245, 255))
-
-                        caption = "{}".format(test_dataset.label_to_name(k))
-                        cv2.putText(
-                            img=raw_image,
-                            text=caption,
-                            org=(int(box[0]), int(box[1]) - 10),
-                            fontFace=cv2.FONT_HERSHEY_PLAIN,
-                            fontScale=2,
-                            color=(32, 245, 255),
-                            thickness=3)
-
-                # if self.env.eval_heatmaps:
-
-                # axs[i, 0].imshow(raw_image.astype(np.uint8))
-                name = re.sub(r'^(\d{4})', r'\1{}'.format('abcdefghijklmnopqrstuvwxyz'[ds]), self.model.full_name)
-                # plt.show()
-                # exit(0)
-                if self.env.eval_images:
-                    # plt.show()
-                    with open('{}/eval-{}{}{}-{}.png'.format(
-                            full_path,
-                            name,
-                            self.env.eval_name_suffix if self.env.eval_name_suffix else '',
-                            '-fullsize' if self.env.full_size_eval else '',
-                            i
-                    ), 'wb') as f:
-                        Image.fromarray(raw_image.astype(np.uint8)).save(f)
-
-                if self.env.eval_heatmaps:
-                    # plt.show()
-                    with open('{}/eval-{}{}{}-{}-heatmap.png'.format(
-                            full_path,
-                            name,
-                            self.env.eval_name_suffix if self.env.eval_name_suffix else '',
-                            '-fullsize' if self.env.full_size_eval else '',
-                            i
-                    ), 'wb') as f:
-                        fullsize_fig.savefig(f, format='png')
-                        # Image.fromarray(fullsize_fig.astype(np.uint8)).save(f)
-
-            if self.env.eval_heatmaps_overview:
-                plt.show()
-                with open('{}/eval-{}{}{}.pdf'.format(full_path, name,
-                                                      self.env.eval_name_suffix if self.env.eval_name_suffix else '',
-                                                      '-fullsize' if self.env.full_size_eval else ''), 'wb') as f:
-                    fig.savefig(f, format='pdf')
-                    # Image.fromarray(plt).save(f)
-
-            for iou_threshold in iou_thresholds:
-
-                out[str(iou_threshold)] = {}
-
+                # Within, iterate over all labels i.e. classes
                 for label in range(len(test_dataset.get_label_names())):
 
-                    out[str(iou_threshold)][str(label)] = {}
-                    false_positives = np.zeros((0,))
+                    results[str(iou_threshold)][str(label)] = {}
+
                     true_positives = np.zeros((0,))
+                    false_positives = np.zeros((0,))
                     scores = np.zeros((0,))
                     num_annotations = 0.0
 
-                    for i, xy in enumerate(test_dataset.get_image_info()):
-                        # X, Y = xy
+                    # Accumulate scores for all images
+                    for i, xy in enumerate(all_image_infos):
+
                         detections = all_detections[i][label]
 
                         annotations = all_annotations[i][label]
@@ -371,8 +353,6 @@ class WoundDetectionSuite:
 
                             overlaps = compute_overlap(np.expand_dims(np.asarray(detection.bbox, dtype=np.double), axis=0), annotations)
 
-                            # print('Overlaps for label ', label)
-                            # print(overlaps)
                             assigned_annotation = np.argmax(overlaps, axis=1)
                             max_overlap = overlaps[0, assigned_annotation]
 
@@ -409,7 +389,7 @@ class WoundDetectionSuite:
                     average_precision = _compute_ap(recall, precision)
                     average_precisions[label] = average_precision, num_annotations
 
-                    out[str(iou_threshold)][str(label)] = {
+                    results[str(iou_threshold)][str(label)] = {
                         'map': average_precision,
                         'num_anns': num_annotations,
                         'recall': recall[-1] if recall.shape[0] > 0 else 0.0,
@@ -421,25 +401,21 @@ class WoundDetectionSuite:
 
                     for i, v in enumerate(zip(reversed(precision), reversed(recall))):
                         prec, rec = v
-                        precisions.append(max(precisions[i-1], prec) if len(precisions) > 0 else prec)
+                        precisions.append(max(precisions[i - 1], prec) if len(precisions) > 0 else prec)
                         recalls.append(rec)
 
                     precisions = list(reversed(precisions))
                     recalls = list(reversed(recalls))
 
                     plot_fig = plt.figure()
-                    # plt.xlim(left=0, right=1.0)
-                    # plt.ylim(bottom=0, top=1.0)
                     plt.plot(recalls, precisions, drawstyle='steps-mid')
-                    # fig.show()
-                    name = re.sub(r'^(\d{4})', r'\1{}'.format('abcdefghijklmnopqrstuvwxyz'[ds]), self.model.full_name)
+                    name = re.sub(r'^(\d{4})', r'\1{}'.format('abcdefghijklmnopqrstuvwxyz'[ds]), self.model_adapter.full_name)
 
                     with open('{}/eval-{}{}{}-{}-{}.pdf'.format(full_path, name,
-                                                          self.env.eval_name_suffix if self.env.eval_name_suffix else '',
-                                                          '-fullsize' if self.env.full_size_eval else '',
-                                                             'roc_iou_{}'.format(iou_threshold), label), 'wb') as f:
+                                                                name_suffix if name_suffix else '',
+                                                                '-fullsize' if self.env.full_size_eval else '',
+                                                                'roc_iou_{}'.format(iou_threshold), label), 'wb') as f:
                         plot_fig.savefig(f, format='pdf')
-            print(out)
 
             csv = ''
 
@@ -447,7 +423,7 @@ class WoundDetectionSuite:
             for label in range(len(test_dataset.get_label_names())):
                 csv += '{}'.format(test_dataset.label_to_name(label))
 
-                for key, val in out.items():
+                for key, val in results.items():
                     val = val.get(str(label))
                     prec = val.get('precision', 0)
                     rec = val.get('recall', 0)
@@ -464,89 +440,7 @@ class WoundDetectionSuite:
             if self.env.auto_xval:
                 self.env.name = re.sub(r'^(\d{4})', r'\1{}'.format('abcdefghijklmnopqrstuvwxyz'[ds]), base_name)
 
-            with open('{}/eval-{}{}{}.csv'.format(full_path, self.model.full_name,
-                                                  self.env.eval_name_suffix if self.env.eval_name_suffix else '',
+            with open('{}/eval-{}{}{}.csv'.format(full_path, self.model_adapter.full_name,
+                                                  name_suffix if name_suffix else '',
                                                   '-fullsize' if self.env.full_size_eval else ''), 'w', encoding='utf-8') as f:
                 f.write(csv)
-
-            # return out
-
-    def __get_image_file_generator(self, path):
-        """
-        Returns a generator yielding files.
-        :param path: Either path to a file or directory
-        :type path: str
-        :return: Generator
-        :rtype: Generator
-        """
-
-        EXTENSIONS = (
-            'jpg', 'png', 'bmp',
-        )
-
-        def gen():
-
-            if os.path.isdir(path):
-                for cur_path, dirs, files in os.walk(path):
-                    for file in files:
-                        print(file)
-                        for ext in EXTENSIONS:
-                            if ext in file.lower():
-                                yield join(cur_path, file)
-                                break
-
-            else:
-                yield path
-
-        return gen()
-
-    def apply_detections(self, image: np.array, detections: List[Detection]):
-        for detection in detections:
-            box = detection.bbox
-            draw_box(image, box, color=(23, 245, 255))
-
-            caption = "{}".format('gür')
-            cv2.putText(
-                img=image,
-                text=caption,
-                org=(int(box[0]), int(box[1]) - 10),
-                fontFace=cv2.FONT_HERSHEY_PLAIN,
-                fontScale=2,
-                color=(32, 245, 255),
-                thickness=3)
-
-    def detect(self, path: str, out_dir: str, show: bool = False):
-        """
-        Run wound detection
-        """
-
-        self.__logger.info('-- Running detection...')
-
-        model_adapter = self.__create_model_adapter(self.__config['DETECTION_MODEL']['model'])
-
-        if os.path.isdir(path):
-            self.__logger.info('---- Looking for image files in {}'.format(os.path.abspath(path)))
-
-        images_processed = 0
-        for image_file in self.__get_image_file_generator(path):
-
-            self.__logger.info('---- Loading image {}'.format(image_file))
-            img = Image.open(image_file)
-            img = np.array(img, dtype=np.float32)
-
-            detections = model_adapter.predict([img])
-
-            print(detections)
-            out_dir = out_dir or os.path.abspath(os.path.dirname(image_file))
-            if out_dir:
-                draw_image = img.copy()
-                self.apply_detections(draw_image, detections[0])
-
-                Image.fromarray(draw_image.astype('uint8')).save(join(out_dir, 'det.jpg'))
-
-            images_processed += 1
-
-        if images_processed == 0:
-            self.__logger.warning('---- No image files found!')
-        else:
-            self.__logger.info('---- {} images processed. Goodbye.'.format(images_processed))

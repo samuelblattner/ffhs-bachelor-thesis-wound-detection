@@ -4,6 +4,7 @@ from os.path import join
 from suite.adapters.datasets.retina import RetinaDataset
 from suite.adapters.datasets.yolo3 import Yolo_3Dataset
 # from suite.adapters.models.frcnn import FRCNNAdapter
+from suite.adapters.models.frcnn import FRCNNAdapter
 from suite.enums import NeuralNetEnum
 from suite.adapters.models.retina import RetinaResnet50Adapter, RetinaResnet101Adapter, RetinaResnet152Adapter, RetinaDensenet121Adapter, \
     RetinaDensenet169Adapter, RetinaDensenet201Adapter, RetinaMobilenet128Adapter, RetinaMobilenet160Adapter, RetinaMobilenet192Adapter, \
@@ -36,7 +37,7 @@ NET_MAP = {
 FACTORY_MAP = {
     NeuralNetEnum.YOLO_3_DARKNET: Yolo3Adapter,
 
-    # NeuralNetEnum.FRCNN_RESNET50: FRCNNAdapter,
+    NeuralNetEnum.FRCNN_RESNET50: FRCNNAdapter,
 
     NeuralNetEnum.RETINA_RESNET50: RetinaResnet50Adapter,
     NeuralNetEnum.RETINA_RESNET101: RetinaResnet101Adapter,

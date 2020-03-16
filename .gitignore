@@ -1,5 +1,5 @@
 .idea
-data/
+data/**/images/*
 checkpoints/
 *.pyc
 backend.h5

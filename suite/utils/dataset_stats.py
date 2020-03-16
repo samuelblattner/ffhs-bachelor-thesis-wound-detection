@@ -3,7 +3,6 @@ from os.path import join
 
 import numpy as np
 import pandas as pd
-from imgaug.parameters import show_distributions_grid, Clip, Normal, Absolute, Add
 from matplotlib import pyplot as plt
 
 
@@ -12,6 +11,7 @@ DATA_PATH = 'data/vanilla_datasets/'
 
 DATASETS = (
     ('Puppet', 'puppet_measure_bands'),
+    ('Puppet Extracted', 'puppet_measure_bands_closeups'),
     ('Full Body Shots', 'body_shots'),
     ('Close Up Wounds', 'closeup_wounds'),
     ('Close Up Wounds Cases', 'close_up_wounds_conf'),

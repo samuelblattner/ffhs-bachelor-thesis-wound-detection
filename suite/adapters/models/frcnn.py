@@ -12,10 +12,10 @@ from keras.optimizers import Adam
 from keras.utils import generic_utils
 from keras.applications.resnet50 import ResNet50
 
-from common.adapters.datasets.interfaces import AbstractDataset
-from common.adapters.models.interfaces import AbstractModelAdapter
-from common.config.frcnn import FRCNNConfig
-from common.detection import Detection
+from suite.adapters.datasets.interfaces import AbstractDataset
+from suite.adapters.models.interfaces import AbstractModelAdapter
+from suite.config.frcnn import FRCNNConfig
+from suite.detection import Detection
 from neural_nets.frcnn.keras_frcnn import resnet as nn
 from neural_nets.frcnn.keras_frcnn import config, roi_helpers
 from neural_nets.frcnn.keras_frcnn import losses as losses_fn
@@ -36,7 +36,7 @@ class FRCNNAdapter(AbstractModelAdapter):
     def load_latest_checkpoint(self):
         super(FRCNNAdapter, self).load_latest_checkpoint()
 
-    def build_models(self) -> Tuple[Model, Model]:
+    def build_models(self, _, __) -> Tuple[Model, Model]:
         """
         Build FRCNN Models (adapter from frcnn)
         :return:
@@ -56,6 +56,8 @@ class FRCNNAdapter(AbstractModelAdapter):
 
         img_input = Input(shape=input_shape_img)
         roi_input = Input(shape=(None, 4))
+
+        # self.env.allow_base_layer_training = True
 
         # define the base network (resnet here, can be VGG, Inception, etc)
         # define the base network (resnet here, can be VGG, Inception, etc)
@@ -83,7 +85,7 @@ class FRCNNAdapter(AbstractModelAdapter):
         #     layer.name += '_1'
         #     print(layer.name)
 
-        classifier = nn.classifier(shared_layers, roi_input, self.cfg.num_rois, nb_classes=self.num_classes + 1, trainable=True)
+        classifier = nn.classifier(shared_layers, roi_input, self.cfg.num_rois, nb_classes=len(self._classes) + 1, trainable=True)
 
         model_rpn = Model(img_input, rpn[:2])
         model_classifier = Model([img_input, roi_input], classifier)
@@ -120,9 +122,11 @@ class FRCNNAdapter(AbstractModelAdapter):
         model_rpn.compile(optimizer=optimizer,
                           loss=[losses_fn.rpn_loss_cls(num_anchors), losses_fn.rpn_loss_regr(num_anchors)])
         model_classifier.compile(optimizer=optimizer_classifier,
-                                 loss=[losses_fn.class_loss_cls, losses_fn.class_loss_regr(self.num_classes)],
-                                 metrics={'dense_class_{}'.format(self.num_classes + 1): 'accuracy'})
+                                 loss=[losses_fn.class_loss_cls, losses_fn.class_loss_regr(len(self._classes))],
+                                 metrics={'dense_class_{}'.format(len(self._classes) + 1): 'accuracy'})
         model_all.compile(optimizer='sgd', loss='mae')
+
+        model_all.summary()
 
         return (model_rpn, model_classifier, model_all), None
 
